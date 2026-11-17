@@ -113,12 +113,83 @@ test("a linha de projeto empilha os metadados antes de 1440 px", () => {
   assert.match(block, /\.project-meta\s*{[^}]*grid-column:\s*2/);
 });
 
-test("o botão de montagem não cobre o link do rodapé do hero", () => {
+test("o botão de montagem fica no rodapé do hero e não flutua sobre o conteúdo", () => {
   const css = readCss();
-  const ranges = mediaRanges(css, "@media (min-width: 721px)");
-  assert.ok(ranges.length > 0, "o espaço do botão flutuante vale a partir de 721 px");
+  const button = readRule(css, ".scene-button {");
+  assert.doesNotMatch(button, /position:\s*fixed/, "o botão não pode flutuar sobre o conteúdo");
+  assert.match(button, /min-height:\s*44px/);
+  assert.match(button, /align-items:\s*center/);
+
+  const foot = readRule(css, ".hero-foot {");
+  assert.match(foot, /flex-wrap:\s*wrap/);
+  assert.match(css, /\.hero-foot-actions\s*{[^}]*display:\s*flex/);
+
+  const ranges = mediaRanges(css, "@media (max-width: 720px)");
+  assert.ok(ranges.length > 0, "o breakpoint de 720 px precisa existir");
   const block = ranges.map(([open, close]) => css.slice(open, close)).join("\n");
-  assert.match(block, /html\.js \.hero-foot\s*{[^}]*padding-right:\s*168px/);
+  assert.match(block, /\.hero-foot\s*{[^}]*position:\s*static/, "no mobile o rodapé entra no fluxo do hero");
+});
+
+test("o nome domina o hero com kicker, resumo e linha de fatos", () => {
+  const css = readCss();
+  const h1 = readRule(css, ".hero h1");
+  assert.match(h1, /font-size:\s*clamp\(64px,\s*9\.5vw,\s*136px\)/);
+  assert.match(h1, /line-height:\s*0\.84/);
+  assert.match(h1, /letter-spacing:\s*-0\.03em/);
+  assert.doesNotMatch(h1, /overflow-wrap:\s*anywhere/);
+
+  const kicker = readRule(css, ".hero-kicker");
+  assert.match(kicker, /font-size:\s*11px/);
+  assert.match(kicker, /font-weight:\s*700/);
+  assert.match(kicker, /letter-spacing:\s*0\.14em/);
+  assert.match(kicker, /text-transform:\s*uppercase/);
+  assert.match(kicker, /color:\s*var\(--mint-text\)/);
+
+  const facts = readRule(css, ".hero-facts");
+  assert.match(facts, /font-size:\s*13px/);
+  assert.match(facts, /line-height:\s*1\.45/);
+  assert.match(facts, /grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/);
+  assert.match(facts, /border-block:\s*1px solid var\(--line\)/);
+  assert.match(css, /\.hero-facts li\s*{[^}]*border-left:\s*1px solid var\(--line\)/);
+  assert.doesNotMatch(css, /\.hero-name/);
+});
+
+test("em 390 px o nome cabe em duas linhas e os fatos empilham em coluna", () => {
+  const css = readCss();
+  const ranges = mediaRanges(css, "@media (max-width: 720px)");
+  assert.ok(ranges.length > 0, "o breakpoint de 720 px precisa existir");
+  const block = ranges.map(([open, close]) => css.slice(open, close)).join("\n");
+  assert.match(block, /\.hero h1\s*{[^}]*font-size:\s*clamp\(60px,\s*13\.5vw,\s*76px\)/);
+  assert.doesNotMatch(block, /overflow-wrap/);
+  assert.match(block, /\.hero-facts\s*{[^}]*grid-template-columns:\s*1fr/);
+  assert.match(block, /\.hero-facts li\s*{[^}]*border-top:\s*1px solid var\(--line\)/);
+});
+
+test("o pager do hero tem alvos de 44 px, contador técnico e foco visível", () => {
+  const css = readCss();
+  const pager = readRule(css, ".stage-pager");
+  assert.match(pager, /border-top:\s*1px solid var\(--line\)/);
+  assert.doesNotMatch(pager, /gradient|box-shadow/);
+
+  const button = readRule(css, ".stage-button");
+  assert.match(button, /width:\s*44px/);
+  assert.match(button, /height:\s*44px/);
+  assert.match(button, /background:\s*transparent/);
+  assert.match(button, /transition:[^;]*transform var\(--dur-1\)/);
+  assert.match(button, /transition:[^;]*background-color var\(--dur-1\)/);
+  assert.doesNotMatch(button, /transition:[^;]*(--dur-[34]|--dur-[2-4]\b)/, "o pager usa só --dur-1 e --dur-2");
+
+  assert.match(css, /\.stage-button:hover\s*{[^}]*background:/, "hover discreto sem deslocamento");
+
+  const press = readRule(css, ".stage-button:active");
+  assert.match(press, /transform:\s*scale\(0\.98\)/);
+  assert.match(press, /background:/);
+
+  const count = readRule(css, ".stage-count");
+  assert.match(count, /font-variant-numeric:\s*tabular-nums/);
+  assert.match(count, /letter-spacing:\s*0\.16em/);
+
+  assert.match(css, /\.stage-button:focus-visible\s*{[^}]*outline:\s*2px solid var\(--lime\)/);
 });
 
 test("a troca de prévia dura 160 ms", () => {
@@ -126,6 +197,99 @@ test("a troca de prévia dura 160 ms", () => {
   assert.match(css, /--dur-2:\s*160ms/);
   assert.match(css, /\.preview-stage\.is-swapping \.stage-canvas[\s\S]*?animation:\s*preview-swap var\(--dur-2\)/);
   assert.match(css, /@keyframes preview-swap/);
+});
+
+test("o esquema tem lista, item, tag, texto e rodapé com hierarquia visual", () => {
+  const css = readCss();
+  assert.match(css, /\.schematic-list\s*{[^}]*display:\s*grid/);
+  assert.match(css, /\.schematic-list\s*{[^}]*list-style:\s*none/);
+  assert.match(css, /\.schematic-item\s*{[^}]*display:\s*grid/);
+  assert.match(css, /\.schematic-item\s*{[^}]*border:\s*1px solid var\(--line\)/);
+  assert.match(css, /\.schematic-tag\s*{[^}]*color:\s*var\(--mint-text\)/);
+  assert.match(css, /\.schematic-tag\s*{[^}]*text-transform:\s*uppercase/);
+  assert.match(css, /\.schematic-text\s*{[^}]*font-size:\s*12px/);
+  assert.match(css, /\.schematic-foot\s*{[^}]*border-top:\s*1px solid var\(--line\)/);
+  assert.match(css, /\.schematic-foot\s*{[^}]*color:\s*var\(--muted\)/);
+});
+
+test("o esquema ocupa a área do canvas sem rolagem interna nem deslocamento", () => {
+  const css = readCss();
+  const canvas = readRule(css, ".stage-canvas--schematic {");
+  assert.match(canvas, /display:\s*flex/);
+  assert.match(canvas, /flex-direction:\s*column/);
+  assert.doesNotMatch(canvas, /overflow:\s*(auto|scroll)/);
+
+  assert.match(css, /\.preview-stage\.has-schematic\s*{[^}]*aspect-ratio:\s*auto/, "o palco cresce com o esquema");
+  assert.match(css, /\.hero-stage\.has-schematic\s*{[^}]*min-height:\s*380px/, "o palco do hero mantém altura estável");
+  const heroStages = [...css.matchAll(/\.hero-stage\.has-schematic\s*{[^}]*}/g)];
+  assert.equal(heroStages.length, 1, "a altura do palco do hero é declarada uma vez só");
+  assert.match(css, /\.row-preview\.has-schematic \.stage-canvas\s*{[^}]*aspect-ratio:\s*auto/);
+  assert.match(css, /\.stage-canvas--schematic::before,[\s\S]*?display:\s*none/, "os conectores do fluxo neutro não aparecem no esquema");
+});
+
+test("o rótulo do esquema cabe inteiro na coluna", () => {
+  const css = readCss();
+  const item = readRule(css, ".schematic-item {");
+  const match = item.match(/grid-template-columns:\s*(\d+)px/);
+  assert.ok(match, "a coluna do rótulo precisa de largura fixa");
+  assert.ok(Number(match[1]) >= 76, "a coluna comporta o rótulo mais longo sem corte");
+});
+
+test("o cabeçalho da prévia da linha não corta a stack no celular", () => {
+  const css = readCss();
+  const ranges = mediaRanges(css, "@media (max-width: 720px)");
+  assert.ok(ranges.length > 0, "o breakpoint de 720 px precisa existir");
+  const block = ranges.map(([open, close]) => css.slice(open, close)).join("\n");
+  assert.match(block, /\.row-preview-head\s*{[^}]*flex-wrap:\s*wrap/, "o cabeçalho quebra em vez de cortar");
+  assert.match(block, /\.row-preview-head > span:last-child\s*{[^}]*white-space:\s*normal/);
+});
+
+test("a Trajetória usa hairlines, metadados técnicos e display nos cargos", () => {
+  const css = readCss();
+
+  const layout = readRule(css, ".path-layout {");
+  assert.match(layout, /grid-template-columns:\s*minmax\(0,\s*1fr\)/, "empilha por padrão");
+  assert.match(css, /@media \(min-width: 1024px\)\s*{\s*\.path-layout\s*{[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)[^}]*gap:\s*44px/);
+
+  const item = readRule(css, ".path-item {");
+  assert.match(item, /border-top:\s*1px solid var\(--line\)/);
+  assert.doesNotMatch(item, /transition|animation|box-shadow|background/);
+
+  const period = readRule(css, ".path-period {");
+  assert.match(period, /font-size:\s*10px/);
+  assert.match(period, /text-transform:\s*uppercase/);
+  assert.match(period, /letter-spacing:\s*0\.14em/);
+  assert.match(period, /color:\s*var\(--muted\)/);
+
+  const role = readRule(css, ".path-role {");
+  assert.match(role, /font-family:\s*"Big Shoulders Display"/);
+  assert.match(role, /font-size:\s*clamp\(23px,\s*2\.1vw,\s*29px\)/);
+
+  const org = readRule(css, ".path-org {");
+  assert.match(org, /font-size:\s*15px/);
+  assert.match(org, /color:\s*var\(--paper-dim\)/);
+
+  assert.match(css, /\.path-group h3\s*{[^}]*text-transform:\s*uppercase/);
+  assert.match(css, /\.path-note\s*{[^}]*color:\s*var\(--mint-text\)/);
+  assert.doesNotMatch(css, /\.path-item:hover/, "item de trajetória não é interativo");
+  assert.doesNotMatch(css, /\.path-(list|item)[^{}]*{[^}]*(::before|::after)[^}]*background/, "sem linha do tempo desenhada");
+});
+
+test("o bloco neutro continua estilizado como fallback dos três tipos", () => {
+  const css = readCss();
+  assert.match(css, /\.preview-block\s*{[^}]*border:\s*1px solid var\(--line-strong\)/);
+  assert.match(css, /\.stage-canvas--panel\s*{[^}]*display:\s*grid/);
+  assert.match(css, /\.stage-canvas--terminal\s*{[^}]*display:\s*flex/);
+  assert.match(css, /\.stage-canvas--flow \.preview-block\s*{[^}]*position:\s*absolute/);
+});
+
+test("o rótulo Esquemático acompanha o tipo do palco e da prévia de linha", () => {
+  const css = readCss();
+  assert.match(css, /\.stage-note\s*{[^}]*border:\s*1px solid var\(--line\)/);
+  assert.match(css, /\.stage-note\s*{[^}]*color:\s*var\(--muted\)/);
+  assert.match(css, /\.row-preview-note\s*{[^}]*border:\s*1px solid var\(--line\)/);
+  assert.match(css, /\.stage-chrome\s*{[^}]*justify-content:\s*flex-start/);
+  assert.match(css, /\.stage-title\s*{[^}]*margin-right:\s*auto/);
 });
 
 test("a ficha é folha clara com fechar sempre visível e tela cheia em 480 px", () => {
@@ -254,6 +418,33 @@ test("controles respondem a press e mantêm foco visível", () => {
     assert.ok(index !== -1, `${selector} precisa de foco visível`);
     assert.match(css.slice(index, css.indexOf("}", index)), /outline:/);
   }
+});
+
+test("o link textual responde ao press sem deslocar a linha", () => {
+  const css = readCss();
+  const link = readRule(css, ".text-link {");
+  assert.match(link, /min-height:\s*44px/);
+  assert.match(link, /transition:\s*color var\(--dur-1\)/);
+
+  const press = readRule(css, ".text-link:active");
+  assert.match(press, /color:\s*var\(--lime-text\)/);
+  assert.doesNotMatch(press, /transform|margin|padding|position|top|left/, "press do link não desloca o layout");
+});
+
+test("itens não interativos não ganham hover nem cursor de clique", () => {
+  const css = readCss();
+  assert.doesNotMatch(css, /\.schematic-item:hover/);
+  assert.doesNotMatch(css, /\.path-item:hover/);
+  assert.doesNotMatch(css, /\.schematic-item\s*{[^}]*cursor:/);
+  assert.doesNotMatch(css, /\.path-item\s*{[^}]*cursor:/);
+});
+
+test("o movimento reduzido neutraliza o press do pager", () => {
+  const css = readCss();
+  const blocks = [...css.matchAll(/html\.motion-reduced[^{}]*\{[^}]*transform:\s*none[^}]*\}/g)].map((m) => m[0]);
+  assert.ok(blocks.length > 0, "o bloco global de movimento reduzido precisa existir");
+  assert.ok(blocks.every((block) => block.includes(".stage-button")), "o pager precisa estar na lista de movimento reduzido");
+  assert.ok(blocks.every((block) => block.includes(".copy-email")), "os controles existentes continuam na lista");
 });
 
 test("contato copiável tem alvo de 44 px e mantém o mailto visível", () => {

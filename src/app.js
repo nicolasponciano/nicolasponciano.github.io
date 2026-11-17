@@ -12,19 +12,21 @@ import {
   getInitialAgentCount,
   getSceneCursorPoint,
   getSceneLeg,
+  getSchematic,
+  movePreviewIndex,
   moveSelection,
   nextTheme,
   normalizeSlug,
   parseUrlState,
+  previewCountLabel,
   resolveCloseFocus,
   resolveTheme,
   resultLabel,
   searchItems,
   shouldAnimate,
   shouldForceClose,
+  shouldShowPager,
 } from "./core.js";
-
-const previewLabels = { panel: "Painel", terminal: "Terminal", flow: "Fluxo" };
 
 const page = {
   rows: [],
@@ -80,7 +82,7 @@ const SCENE_LABELS = ["MALHA", "LEITURA", "INTERFACE", "SERVIÇO", "DADOS", "CON
 const SCENE_COLORS = ["var(--mint)", "var(--lime)", "var(--coral)"];
 const SCENE_TARGETS = [
   ".hero-copy h1",
-  ".hero-name",
+  ".hero-facts",
   ".hero-actions",
   ".hero-stage",
   ".filter-bar",
@@ -141,16 +143,61 @@ function readProject(row) {
   };
 }
 
-function renderCanvas(canvas, preview) {
+function renderCanvas(canvas, details) {
+  const preview = details?.preview;
+  const schematic = getSchematic(details, preview);
   canvas.className = `stage-canvas stage-canvas--${preview}`;
+  canvas.setAttribute("aria-hidden", "true");
   canvas.replaceChildren();
 
-  const blocks = preview === "flow" ? 3 : 4;
-  for (let index = 0; index < blocks; index += 1) {
-    const block = document.createElement("i");
-    block.className = "preview-block";
-    canvas.append(block);
+  if (schematic.items.length === 0) {
+    const blocks = preview === "flow" ? 3 : 4;
+    for (let index = 0; index < blocks; index += 1) {
+      const block = document.createElement("i");
+      block.className = "preview-block";
+      canvas.append(block);
+    }
+    return;
   }
+
+  canvas.classList.add("stage-canvas--schematic");
+
+  const list = document.createElement("ol");
+  list.className = "schematic-list";
+
+  schematic.items.forEach((item) => {
+    const entry = document.createElement("li");
+    entry.className = "schematic-item";
+
+    const tag = document.createElement("span");
+    tag.className = "schematic-tag";
+    tag.textContent = item.tag;
+
+    const text = document.createElement("span");
+    text.className = "schematic-text";
+    text.textContent = item.text;
+
+    entry.append(tag, text);
+    list.append(entry);
+  });
+
+  canvas.append(list);
+
+  if (schematic.foot) {
+    const foot = document.createElement("p");
+    foot.className = "schematic-foot";
+    foot.textContent = schematic.foot;
+    canvas.append(foot);
+  }
+}
+
+function ensureStageNote(stage) {
+  const chrome = stage?.querySelector(".stage-chrome");
+  if (!chrome || chrome.querySelector(".stage-note")) return;
+  const note = document.createElement("span");
+  note.className = "stage-note";
+  note.textContent = "Esquemático";
+  chrome.append(note);
 }
 
 function restartSwap(element) {
@@ -160,20 +207,65 @@ function restartSwap(element) {
 }
 
 function paintStage(stage, { data, details, slug }) {
+  const schematic = getSchematic(details, details.preview);
+  ensureStageNote(stage);
+  stage.classList.toggle("has-schematic", schematic.items.length > 0);
   stage.querySelector("[data-preview-title]").textContent = data.title;
-  stage.querySelector("[data-preview-kind]").textContent = previewLabels[details.preview];
+  stage.querySelector("[data-preview-kind]").textContent = schematic.label;
   stage.querySelector("[data-preview-stack]").textContent = formatValue(data.stacks);
-  renderCanvas(stage.querySelector("[data-preview-canvas]"), details.preview);
+  renderCanvas(stage.querySelector("[data-preview-canvas]"), details);
   stage.dataset.slug = slug;
   restartSwap(stage);
 }
 
 function clearStage(stage) {
+  stage.classList.remove("has-schematic");
   stage.querySelector("[data-preview-title]").textContent = "";
   stage.querySelector("[data-preview-kind]").textContent = "";
   stage.querySelector("[data-preview-stack]").textContent = "";
   stage.querySelector("[data-preview-canvas]").replaceChildren();
   delete stage.dataset.slug;
+}
+
+function initHeroPreview(stage, entries) {
+  if (!stage) return;
+
+  const pager = stage.querySelector("[data-stage-pager]");
+  const live = stage.querySelector("[data-stage-live]");
+  const count = stage.querySelector("[data-stage-count]");
+
+  if (!entries.length) {
+    clearStage(stage);
+    pager?.remove();
+    live?.remove();
+    return;
+  }
+
+  const featured = findFeaturedSlug(page.rows);
+  let index = entries.findIndex((entry) => entry.slug === featured);
+  if (index < 0) index = 0;
+
+  const paint = () => {
+    paintStage(stage, entries[index]);
+    if (count) count.textContent = previewCountLabel(index, entries.length);
+  };
+
+  paint();
+
+  if (!shouldShowPager(entries.length)) {
+    pager?.remove();
+    live?.remove();
+    return;
+  }
+
+  const step = (delta) => {
+    index = movePreviewIndex(index, delta, entries.length);
+    paint();
+    if (live) live.textContent = `${entries[index].data.title}, prévia ${index + 1} de ${entries.length}`;
+  };
+
+  stage.querySelector("[data-stage-prev]")?.addEventListener("click", () => step(-1));
+  stage.querySelector("[data-stage-next]")?.addEventListener("click", () => step(1));
 }
 
 function ensureRowPreview(box) {
@@ -185,10 +277,14 @@ function ensureRowPreview(box) {
     kind.className = "row-preview-kind";
     kind.dataset.previewKind = "";
 
+    const note = document.createElement("span");
+    note.className = "row-preview-note";
+    note.textContent = "Esquemático";
+
     const stack = document.createElement("span");
     stack.dataset.previewStack = "";
 
-    head.append(kind, stack);
+    head.append(kind, note, stack);
     box.append(head);
   }
   return box;
@@ -202,7 +298,9 @@ function createRowPreview() {
 }
 
 function paintRowPreview(box, { data, details }) {
-  box.querySelector("[data-preview-kind]").textContent = previewLabels[details.preview];
+  const schematic = getSchematic(details, details.preview);
+  box.classList.toggle("has-schematic", schematic.items.length > 0);
+  box.querySelector("[data-preview-kind]").textContent = schematic.label;
   box.querySelector("[data-preview-stack]").textContent = formatValue(data.stacks);
 
   let canvas = box.querySelector(".stage-canvas");
@@ -210,7 +308,7 @@ function paintRowPreview(box, { data, details }) {
     canvas = document.createElement("div");
     box.append(canvas);
   }
-  renderCanvas(canvas, details.preview);
+  renderCanvas(canvas, details);
   restartSwap(box);
 }
 
@@ -1053,11 +1151,7 @@ function boot() {
     initRowPreviews(page.rows);
 
     const heroStage = document.querySelector("[data-preview-stage]");
-    if (heroStage) {
-      const featured = findFeaturedSlug(page.rows);
-      const row = page.rows.find((item) => item.dataset.projectSlug === featured) ?? page.rows[0];
-      paintStage(heroStage, readProject(row));
-    }
+    if (heroStage) initHeroPreview(heroStage, page.entries);
 
     page.indexStage = document.querySelector("[data-index-stage]");
     if (page.indexStage) bindIndexPreview(page.rows, page.indexStage);

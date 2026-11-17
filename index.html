@@ -46,9 +46,14 @@
     <main id="conteudo">
       <section class="hero section-shell" id="topo" data-section="hero" data-section-label="Apresentação">
         <div class="hero-copy">
-           <h1>Desenvolvedor de Software Full Stack</h1>
-           <p class="hero-name">Nicolas Ponciano</p>
-           <p class="hero-summary">Desenvolvedor de Software com experiência em .NET, desenvolvimento web, APIs, bancos de dados e integrações. Construo e evoluo soluções corporativas com atenção à arquitetura, qualidade e automação, enquanto aprofundo meus estudos em inteligência artificial.</p>
+          <p class="hero-kicker">Desenvolvedor de Software Full Stack</p>
+          <h1>Nicolas Ponciano</h1>
+          <p class="hero-summary">Desenvolvedor de Software com experiência em .NET, desenvolvimento web, APIs, bancos de dados e integrações. Construo e evoluo soluções corporativas com atenção à arquitetura, qualidade e automação, enquanto aprofundo meus estudos em inteligência artificial.</p>
+          <ul class="hero-facts">
+            <li>Backend .NET e SQL Server</li>
+            <li>Sistemas web corporativos</li>
+            <li>Pós-graduação em IA em andamento</li>
+          </ul>
           <div class="hero-actions">
             <a class="button button-primary" href="#projetos">
               Explorar projetos
@@ -64,21 +69,34 @@
           </div>
         </div>
 
-        <div class="hero-stage preview-stage" data-preview-stage aria-hidden="true">
-          <div class="stage-chrome">
+        <div class="hero-stage preview-stage" data-preview-stage role="group" aria-label="Prévia de projetos">
+          <div class="stage-chrome" aria-hidden="true">
             <span class="stage-title" data-preview-title></span>
             <span class="stage-kind" data-preview-kind></span>
+            <span class="stage-note">Esquemático</span>
           </div>
-          <div class="stage-canvas" data-preview-canvas></div>
-          <div class="stage-foot">
+          <div class="stage-canvas" data-preview-canvas aria-hidden="true"></div>
+          <div class="stage-foot" aria-hidden="true">
             <span>Tecnologias</span>
             <span data-preview-stack></span>
           </div>
+          <div class="stage-pager" data-stage-pager>
+            <button type="button" class="stage-button" data-stage-prev aria-label="Prévia anterior"><span aria-hidden="true">←</span></button>
+            <p class="stage-count" data-stage-count aria-hidden="true">01 / 03</p>
+            <button type="button" class="stage-button" data-stage-next aria-label="Próxima prévia"><span aria-hidden="true">→</span></button>
+          </div>
+          <p class="sr-only" data-stage-live aria-live="polite" aria-atomic="true"></p>
         </div>
 
         <div class="hero-foot">
           <span>Interfaces, serviços e dados</span>
-          <a href="#projetos" aria-label="Ir para projetos">Desça para explorar <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M10 3v13m-5-5 5 5 5-5" /></svg></a>
+          <div class="hero-foot-actions">
+            <a href="#projetos" aria-label="Ir para projetos">Desça para explorar <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M10 3v13m-5-5 5 5 5-5" /></svg></a>
+            <button type="button" class="scene-button" id="scene-button" hidden>
+              <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M4 4h12v12H4zM8 7l5 3-5 3z" /></svg>
+              Ver montagem
+            </button>
+          </div>
         </div>
       </section>
 
@@ -196,12 +214,73 @@
               <span class="stage-title" data-preview-title></span>
               <span class="stage-kind" data-preview-kind></span>
             </div>
-            <div class="stage-canvas" data-preview-canvas></div>
+            <div class="stage-canvas" data-preview-canvas aria-hidden="true"></div>
             <div class="stage-foot">
               <span>Tecnologias</span>
               <span data-preview-stack></span>
             </div>
           </aside>
+        </div>
+      </section>
+
+      <section class="path-section section-shell" id="trajetoria" data-section="path" data-section-label="Trajetória">
+        <div class="section-heading">
+          <h2>Trajetória</h2>
+          <p>Experiência em desenvolvimento de software e formação.</p>
+        </div>
+        <div class="path-layout">
+          <div class="path-group">
+            <h3>Experiência</h3>
+            <ol class="path-list">
+              <li class="path-item">
+                <p class="path-period">fev. 2026 a atual</p>
+                <div class="path-body">
+                  <p class="path-role">Desenvolvedor de Software Júnior</p>
+                  <p class="path-org">Empresa do setor de tecnologia <span class="path-place">Rio de Janeiro</span></p>
+                </div>
+              </li>
+              <li class="path-item">
+                <p class="path-period">jul. 2025 a fev. 2026</p>
+                <div class="path-body">
+                  <p class="path-role">Desenvolvedor de Software Júnior</p>
+                  <p class="path-org">SOFTCASE Soluções Tecnológicas <span class="path-place">Santos</span></p>
+                </div>
+              </li>
+              <li class="path-item">
+                <p class="path-period">jul. 2024 a jul. 2025</p>
+                <div class="path-body">
+                  <p class="path-role">Estágio em Desenvolvimento de Software</p>
+                  <p class="path-org">SOFTCASE Soluções Tecnológicas <span class="path-place">São Vicente</span></p>
+                </div>
+              </li>
+            </ol>
+          </div>
+          <div class="path-group">
+            <h3>Formação</h3>
+            <ol class="path-list">
+              <li class="path-item">
+                <p class="path-period">fev. 2026 a fev. 2027 <span class="path-note">em andamento</span></p>
+                <div class="path-body">
+                  <p class="path-role">Pós-Graduação em Inteligência Artificial</p>
+                  <p class="path-org">Universidade Santa Cecília</p>
+                </div>
+              </li>
+              <li class="path-item">
+                <p class="path-period">fev. 2023 a jun. 2025</p>
+                <div class="path-body">
+                  <p class="path-role">Tecnólogo em Análise e Desenvolvimento de Sistemas</p>
+                  <p class="path-org">Universidade Santa Cecília</p>
+                </div>
+              </li>
+              <li class="path-item">
+                <p class="path-period">fev. 2022 a jul. 2023</p>
+                <div class="path-body">
+                  <p class="path-role">Ensino Técnico em Tecnologia da Informação</p>
+                  <p class="path-org">ETEC Praia Grande</p>
+                </div>
+              </li>
+            </ol>
+          </div>
         </div>
       </section>
 
@@ -298,11 +377,6 @@
         </div>
       </div>
     </dialog>
-
-    <button type="button" class="scene-button" id="scene-button" hidden>
-      <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M4 4h12v12H4zM8 7l5 3-5 3z" /></svg>
-      Ver montagem
-    </button>
 
     <footer class="site-footer">
        <span data-content="profile.name">Nicolas Ponciano</span>

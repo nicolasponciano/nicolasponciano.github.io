@@ -338,3 +338,128 @@ test("a seleção percorre a lista em círculo e trata lista vazia", async () =>
   assert.equal(moveSelection(0, 1, 0), -1);
 });
 
+test("o esquema normaliza rótulo, nota, itens e rodapé sem inventar conteúdo", async () => {
+  const { normalizeSchematic } = await loadCore();
+  const schematic = normalizeSchematic({
+    label: "  API REST  ",
+    note: "Esquemático",
+    items: [
+      { tag: " POST ", text: "  Cadastro   de cliente " },
+      { tag: "GET", text: "   " },
+      { tag: "PUT", text: 42 },
+      { tag: "DELETE", text: "Exclusão" },
+    ],
+    foot: " CEP validado em serviço externo ",
+  });
+
+  assert.deepEqual(schematic, {
+    label: "API REST",
+    note: "Esquemático",
+    items: [
+      { tag: "POST", text: "Cadastro de cliente" },
+      { tag: "DELETE", text: "Exclusão" },
+    ],
+    foot: "CEP validado em serviço externo",
+  });
+});
+
+test("esquema sem item válido devolve null e a nota cai no padrão", async () => {
+  const { normalizeSchematic } = await loadCore();
+  assert.equal(normalizeSchematic(), null);
+  assert.equal(normalizeSchematic(null), null);
+  assert.equal(normalizeSchematic("panel"), null);
+  assert.equal(normalizeSchematic({ label: "API REST" }), null);
+  assert.equal(normalizeSchematic({ items: [] }), null);
+  assert.equal(normalizeSchematic({ items: [{ tag: "GET", text: "" }] }), null);
+  assert.equal(normalizeSchematic({ items: [{ tag: "GET" }] }), null);
+
+  const withoutNote = normalizeSchematic({ items: [{ tag: "GET", text: "Consulta" }] });
+  assert.equal(withoutNote.note, "Esquemático");
+  assert.equal(withoutNote.label, "");
+  assert.equal(withoutNote.foot, "");
+});
+
+test("o esquema respeita o limite de cinco itens", async () => {
+  const { SCHEMATIC_MAX_ITEMS, normalizeSchematic } = await loadCore();
+  assert.equal(SCHEMATIC_MAX_ITEMS, 5);
+
+  const items = Array.from({ length: 9 }, (_, index) => ({ tag: `t${index}`, text: `Item ${index}` }));
+  const schematic = normalizeSchematic({ items });
+  assert.equal(schematic.items.length, 5);
+  assert.deepEqual(schematic.items.map((item) => item.text), [
+    "Item 0",
+    "Item 1",
+    "Item 2",
+    "Item 3",
+    "Item 4",
+  ]);
+});
+
+test("esquema ausente ou inválido cai no neutro do tipo da prévia", async () => {
+  const { getSchematic } = await loadCore();
+  const panel = { label: "Painel", note: "Esquemático", items: [], foot: "" };
+  const terminal = { label: "Terminal", note: "Esquemático", items: [], foot: "" };
+  const flow = { label: "Fluxo", note: "Esquemático", items: [], foot: "" };
+
+  assert.deepEqual(getSchematic({ preview: "panel" }, "panel"), panel);
+  assert.deepEqual(getSchematic({}, "terminal"), terminal);
+  assert.deepEqual(getSchematic(null, "flow"), flow);
+  assert.deepEqual(getSchematic(undefined), panel, "tipo ausente cai em panel");
+  assert.deepEqual(getSchematic({}, "3d"), panel, "tipo desconhecido cai em panel");
+  assert.deepEqual(getSchematic({ schematic: { items: [] } }, "terminal"), terminal, "esquema sem item cai no neutro");
+  assert.deepEqual(
+    getSchematic({ schematic: { items: [{ tag: "GET", text: " " }] } }, "flow"),
+    flow,
+    "item sem texto cai no neutro",
+  );
+});
+
+test("esquema válido vence o tipo da prévia e só conteúdo é reaproveitado", async () => {
+  const { getSchematic } = await loadCore();
+  const schematic = {
+    label: "Sessão de ferramentas",
+    note: "Esquemático",
+    items: [{ tag: "status", text: "open_mind_status" }],
+    foot: "open_mind_project_context por sessão",
+  };
+
+  assert.deepEqual(getSchematic({ schematic, preview: "panel" }, "panel"), schematic);
+  assert.deepEqual(getSchematic({ schematic }, "flow"), schematic, "o tipo da prévia não altera o esquema");
+});
+
+test("a prévia do palco percorre os projetos em círculo", async () => {
+  const { movePreviewIndex } = await loadCore();
+  assert.equal(movePreviewIndex(0, 1, 3), 1);
+  assert.equal(movePreviewIndex(1, 1, 3), 2);
+  assert.equal(movePreviewIndex(2, 1, 3), 0, "próximo no último volta ao primeiro");
+  assert.equal(movePreviewIndex(0, -1, 3), 2, "anterior no primeiro vai ao último");
+  assert.equal(movePreviewIndex(2, -1, 3), 1);
+  assert.equal(movePreviewIndex(1, 0, 3), 1);
+  assert.equal(movePreviewIndex(0, 1, 1), 0, "com um projeto o índice fica em zero");
+  assert.equal(movePreviewIndex(0, -1, 1), 0);
+  assert.equal(movePreviewIndex(0, 1, 0), -1, "sem projeto não existe índice");
+  assert.equal(movePreviewIndex(0, 1, undefined), -1);
+});
+
+test("o pager só aparece com dois ou mais projetos", async () => {
+  const { shouldShowPager } = await loadCore();
+  assert.equal(shouldShowPager(0), false);
+  assert.equal(shouldShowPager(1), false);
+  assert.equal(shouldShowPager(2), true);
+  assert.equal(shouldShowPager(3), true);
+  assert.equal(shouldShowPager(undefined), false);
+  assert.equal(shouldShowPager("3"), false, "contagem precisa ser numérica");
+});
+
+test("o contador da prévia usa dois dígitos e espaço ao redor da barra", async () => {
+  const { previewCountLabel } = await loadCore();
+  assert.equal(previewCountLabel(0, 3), "01 / 03");
+  assert.equal(previewCountLabel(1, 3), "02 / 03");
+  assert.equal(previewCountLabel(2, 3), "03 / 03");
+  assert.equal(previewCountLabel(9, 12), "10 / 12");
+  assert.equal(previewCountLabel(0, 1), "01 / 01");
+  assert.equal(previewCountLabel(0, 0), "00 / 00");
+  assert.equal(previewCountLabel(-1, 3), "03 / 03", "índice fora da faixa é normalizado");
+  assert.equal(previewCountLabel(5, 3), "03 / 03");
+});
+

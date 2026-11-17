@@ -42,6 +42,7 @@ export function getProjectDetails(details, slug) {
     solution: formatValue(entry.solution),
     featured: entry.featured === true,
     preview: previewTypes.includes(entry.preview) ? entry.preview : "panel",
+    schematic: entry.schematic ?? null,
   };
 }
 

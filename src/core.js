@@ -282,3 +282,66 @@ export function moveSelection(index, delta, length) {
   return ((start + step) % size + size) % size;
 }
 
+export const SCHEMATIC_MAX_ITEMS = 5;
+
+const PREVIEW_TYPES = ["panel", "terminal", "flow"];
+const NEUTRAL_SCHEMATIC_LABELS = { panel: "Painel", terminal: "Terminal", flow: "Fluxo" };
+const SCHEMATIC_NOTE = "Esquemático";
+
+function cleanSchematicText(value) {
+  if (typeof value !== "string") return "";
+  return value.trim().replace(/\s+/g, " ");
+}
+
+export function normalizeSchematic(value) {
+  if (!value || typeof value !== "object") return null;
+
+  const items = (Array.isArray(value.items) ? value.items : [])
+    .slice(0, SCHEMATIC_MAX_ITEMS)
+    .map((item) => ({
+      tag: cleanSchematicText(item?.tag),
+      text: cleanSchematicText(item?.text),
+    }))
+    .filter((item) => item.text);
+
+  if (items.length === 0) return null;
+
+  return {
+    label: cleanSchematicText(value.label),
+    note: cleanSchematicText(value.note) || SCHEMATIC_NOTE,
+    items,
+    foot: cleanSchematicText(value.foot),
+  };
+}
+
+export function getSchematic(details, fallbackType = "panel") {
+  const normalized = normalizeSchematic(details?.schematic);
+  if (normalized) return normalized;
+
+  const type = PREVIEW_TYPES.includes(fallbackType) ? fallbackType : "panel";
+  return {
+    label: NEUTRAL_SCHEMATIC_LABELS[type],
+    note: SCHEMATIC_NOTE,
+    items: [],
+    foot: "",
+  };
+}
+
+export function movePreviewIndex(index, delta, length) {
+  return moveSelection(index, delta, length);
+}
+
+export function shouldShowPager(length) {
+  const size = Number.isFinite(length) ? Math.floor(length) : 0;
+  return size >= 2;
+}
+
+export function previewCountLabel(index, length) {
+  const size = Number.isFinite(length) ? Math.max(0, Math.floor(length)) : 0;
+  const pad = (number) => String(number).padStart(2, "0");
+  if (size === 0) return `${pad(0)} / ${pad(0)}`;
+
+  const current = movePreviewIndex(index, 0, size);
+  return `${pad(current + 1)} / ${pad(size)}`;
+}
+
