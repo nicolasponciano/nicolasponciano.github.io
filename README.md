@@ -1,6 +1,19 @@
 # Portfólio Full Stack
 
+Site publicado em **https://nicolasponciano.github.io**
+
+Portfólio de Nicolas Ponciano, desenvolvedor de software full stack: apresentação, experiências, formação, tecnologias e três projetos reais com papel, desafio e solução.
+
 Página única, estática, em HTML, CSS e JavaScript. A página é montada em cena por 18 cursores no desktop e 8 em telas estreitas.
+
+## Tecnologias
+
+- HTML, CSS e JavaScript sem framework, sem etapa de build
+- CSS: variáveis, grid, tipografia local com `@font-face`, temas claro e escuro
+- JavaScript: módulos ES, estado de URL (filtro e projeto aberto), `dialog`, `prefers-reduced-motion`
+- Fontes locais: Big Shoulders Display e Atkinson Hyperlegible
+- Testes em Node.js (`node:test`) sobre as regras puras de `src/core.js`
+- Publicação via GitHub Pages, direto da raiz de `main`
 
 ## Rodar localmente
 
