@@ -1,0 +1,11 @@
+node_modules/
+*.log
+
+# Saídas locais do Impeccable (capturas e mocks)
+.impeccable/review/
+.impeccable/mocks/
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,1072 @@
+import { projectDetails } from "./data/portfolio.js";
+import { fillProjectDialog, formatValue, getProjectDetails, readRowData } from "./content.js";
+import {
+  CHANGE_FALLBACK_MS,
+  SCENE_DURATION_MS,
+  buildUrl,
+  collectStackOptions,
+  countLabel,
+  filterProjects,
+  getAgentIdlePosition,
+  getBlockSizeLabel,
+  getInitialAgentCount,
+  getSceneCursorPoint,
+  getSceneLeg,
+  moveSelection,
+  nextTheme,
+  normalizeSlug,
+  parseUrlState,
+  resolveCloseFocus,
+  resolveTheme,
+  resultLabel,
+  searchItems,
+  shouldAnimate,
+  shouldForceClose,
+} from "./core.js";
+
+const previewLabels = { panel: "Painel", terminal: "Terminal", flow: "Fluxo" };
+
+const page = {
+  rows: [],
+  entries: [],
+  bySlug: new Map(),
+  bar: null,
+  count: null,
+  empty: null,
+  clear: null,
+  dialog: null,
+  indexStage: null,
+};
+
+const state = {
+  currentSlug: null,
+  closing: null,
+  timer: null,
+  popHandler: null,
+  pendingFocus: null,
+};
+
+const palette = {
+  dialog: null,
+  input: null,
+  list: null,
+  count: null,
+  empty: null,
+  items: [],
+  results: [],
+  index: -1,
+  opener: null,
+};
+
+const paletteKindLabels = { project: "Projeto", stack: "Stack", section: "Seção", contact: "Contato" };
+
+const THEME_KEY = "portfolio-theme";
+const COPY_FEEDBACK_MS = 2400;
+
+const contact = {
+  button: null,
+  status: null,
+  timer: null,
+  request: 0,
+};
+
+const theme = {
+  toggle: null,
+  current: "ink",
+};
+
+const SCENE_LEGS = 7;
+const SCENE_LABELS = ["MALHA", "LEITURA", "INTERFACE", "SERVIÇO", "DADOS", "CONTRASTE"];
+const SCENE_COLORS = ["var(--mint)", "var(--lime)", "var(--coral)"];
+const SCENE_TARGETS = [
+  ".hero-copy h1",
+  ".hero-name",
+  ".hero-actions",
+  ".hero-stage",
+  ".filter-bar",
+  ".project-entry",
+  ".section-heading h2",
+  ".contact-email",
+  ".site-footer",
+];
+const SCENE_EVENTS = ["pointerdown", "keydown", "wheel", "scroll", "touchstart"];
+
+const scene = {
+  button: null,
+  layer: null,
+  status: null,
+  selection: null,
+  measure: null,
+  cursors: [],
+  legs: [],
+  count: 0,
+  currentLeg: -1,
+  frame: null,
+  timer: null,
+  endTimer: null,
+  startedAt: 0,
+  stoppedAt: Number.NEGATIVE_INFINITY,
+  running: false,
+  motion: null,
+};
+
+function findFeaturedSlug(rows) {
+  const featured = Object.keys(projectDetails).find((slug) => projectDetails[slug]?.featured === true);
+  if (featured && rows.some((row) => row.dataset.projectSlug === featured)) return featured;
+  return rows[0]?.dataset.projectSlug ?? featured ?? "";
+}
+
+function readRow(row) {
+  const stacks = [...(row?.querySelectorAll(".stack-list .stack-tag") ?? [])];
+  const links = [...(row?.querySelectorAll(".project-links a[href]") ?? [])];
+
+  return readRowData({
+    slug: row?.dataset.projectSlug,
+    title: row?.querySelector("h3")?.textContent,
+    summary: row?.querySelector(".project-main > p")?.textContent,
+    stacks: stacks.map((tag) => tag.textContent),
+    year: row?.querySelector("[data-project-year]")?.textContent,
+    links: links.map((link) => ({ label: link.textContent, url: link.getAttribute("href") })),
+  });
+}
+
+function readProject(row) {
+  const data = readRow(row);
+  return {
+    row,
+    data,
+    details: getProjectDetails(projectDetails, row.dataset.projectSlug),
+    slug: data.slug,
+    stacks: data.stacks,
+  };
+}
+
+function renderCanvas(canvas, preview) {
+  canvas.className = `stage-canvas stage-canvas--${preview}`;
+  canvas.replaceChildren();
+
+  const blocks = preview === "flow" ? 3 : 4;
+  for (let index = 0; index < blocks; index += 1) {
+    const block = document.createElement("i");
+    block.className = "preview-block";
+    canvas.append(block);
+  }
+}
+
+function restartSwap(element) {
+  element.classList.remove("is-swapping");
+  void element.offsetWidth;
+  element.classList.add("is-swapping");
+}
+
+function paintStage(stage, { data, details, slug }) {
+  stage.querySelector("[data-preview-title]").textContent = data.title;
+  stage.querySelector("[data-preview-kind]").textContent = previewLabels[details.preview];
+  stage.querySelector("[data-preview-stack]").textContent = formatValue(data.stacks);
+  renderCanvas(stage.querySelector("[data-preview-canvas]"), details.preview);
+  stage.dataset.slug = slug;
+  restartSwap(stage);
+}
+
+function clearStage(stage) {
+  stage.querySelector("[data-preview-title]").textContent = "";
+  stage.querySelector("[data-preview-kind]").textContent = "";
+  stage.querySelector("[data-preview-stack]").textContent = "";
+  stage.querySelector("[data-preview-canvas]").replaceChildren();
+  delete stage.dataset.slug;
+}
+
+function ensureRowPreview(box) {
+  if (!box.querySelector("[data-preview-kind]")) {
+    const head = document.createElement("div");
+    head.className = "row-preview-head";
+
+    const kind = document.createElement("span");
+    kind.className = "row-preview-kind";
+    kind.dataset.previewKind = "";
+
+    const stack = document.createElement("span");
+    stack.dataset.previewStack = "";
+
+    head.append(kind, stack);
+    box.append(head);
+  }
+  return box;
+}
+
+function createRowPreview() {
+  const box = document.createElement("div");
+  box.className = "row-preview";
+  box.setAttribute("aria-hidden", "true");
+  return ensureRowPreview(box);
+}
+
+function paintRowPreview(box, { data, details }) {
+  box.querySelector("[data-preview-kind]").textContent = previewLabels[details.preview];
+  box.querySelector("[data-preview-stack]").textContent = formatValue(data.stacks);
+
+  let canvas = box.querySelector(".stage-canvas");
+  if (!canvas) {
+    canvas = document.createElement("div");
+    box.append(canvas);
+  }
+  renderCanvas(canvas, details.preview);
+  restartSwap(box);
+}
+
+function initRowPreviews(rows) {
+  rows.forEach((row) => {
+    const box = ensureRowPreview(row.querySelector("[data-row-preview]") ?? createRowPreview());
+    if (!box.parentElement) row.append(box);
+    paintRowPreview(box, readProject(row));
+  });
+}
+
+function syncStage(visible) {
+  const stage = page.indexStage;
+  if (!stage) return;
+
+  const current = stage.dataset.slug;
+  if (current && visible.some((entry) => entry.slug === current)) return;
+
+  if (visible.length) paintStage(stage, visible[0]);
+  else clearStage(stage);
+}
+
+function lockScroll() {
+  document.documentElement.style.overflow = "hidden";
+}
+
+function unlockScroll() {
+  document.documentElement.style.overflow = "";
+}
+
+function focusSection(preventScroll = true) {
+  const title = document.querySelector("#projects-title");
+  if (title) title.focus({ preventScroll });
+}
+
+function restoreFocus(slug, intent) {
+  if (intent === "section") {
+    focusSection();
+    return;
+  }
+
+  const entry = slug ? page.bySlug.get(slug) : null;
+  const decision = resolveCloseFocus({ rowVisible: Boolean(entry && !entry.row.hidden) });
+  if (decision.target === "row" && entry) {
+    entry.row.focus({ preventScroll: true });
+    return;
+  }
+  focusSection();
+}
+
+function clearFallback() {
+  if (state.timer !== null) clearTimeout(state.timer);
+  state.timer = null;
+  if (state.popHandler) removeEventListener("popstate", state.popHandler);
+  state.popHandler = null;
+}
+
+function closeDialogLocal() {
+  const dialog = page.dialog;
+  if (dialog?.open) dialog.close();
+  state.currentSlug = null;
+  unlockScroll();
+}
+
+function openProject(slug) {
+  const entry = page.bySlug.get(slug);
+  if (!entry || !page.dialog) return;
+
+  palette.opener = null;
+  closePalette();
+  fillProjectDialog(page.dialog, { row: entry.data, details: entry.details });
+
+  if (!page.dialog.open) {
+    lockScroll();
+    page.dialog.showModal();
+  }
+
+  state.currentSlug = slug;
+  page.dialog.querySelector("[data-dialog-close]")?.focus({ preventScroll: true });
+}
+
+function syncDialog(slug) {
+  const dialog = page.dialog;
+  if (!dialog) return;
+
+  if (slug) {
+    if (state.currentSlug !== slug || !dialog.open) openProject(slug);
+    return;
+  }
+
+  if (!dialog.open) return;
+
+  const closedSlug = state.currentSlug;
+  const intent = state.pendingFocus;
+  state.pendingFocus = null;
+  state.closing = null;
+  clearFallback();
+  closeDialogLocal();
+  restoreFocus(closedSlug, intent);
+}
+
+function forceClose(slug) {
+  if (state.closing !== slug) return;
+  if (!shouldForceClose({ popped: false, elapsedMs: CHANGE_FALLBACK_MS })) return;
+
+  state.closing = null;
+  clearFallback();
+
+  const urlState = parseUrlState(location);
+  const next = buildUrl({ pathname: location.pathname, stack: urlState.stack, project: null });
+  const current = `${location.pathname}${location.search}${location.hash}`;
+  if (next !== current) history.replaceState(null, "", next);
+
+  applyUrlState(parseUrlState(location));
+}
+
+function scheduleFallback(slug) {
+  clearFallback();
+  state.timer = setTimeout(() => forceClose(slug), CHANGE_FALLBACK_MS);
+  state.popHandler = () => clearFallback();
+  addEventListener("popstate", state.popHandler);
+}
+
+function requestClose() {
+  const dialog = page.dialog;
+  if (!dialog?.open || state.closing) return;
+
+  const slug = state.currentSlug;
+  if (history.state?.dialog === slug) {
+    state.closing = slug;
+    scheduleFallback(slug);
+    history.back();
+    return;
+  }
+
+  state.pendingFocus = "section";
+  const urlState = parseUrlState(location);
+  const next = buildUrl({ pathname: location.pathname, stack: urlState.stack, project: null });
+  history.replaceState(null, "", next);
+  applyUrlState(parseUrlState(location));
+}
+
+function applyUrlState(urlState) {
+  const stack = urlState?.stack ?? null;
+  const visible = filterProjects(page.entries, stack);
+  const visibleSlugs = new Set(visible.map((entry) => entry.slug));
+
+  page.entries.forEach(({ row, slug }) => {
+    row.hidden = !visibleSlugs.has(slug);
+  });
+
+  if (page.count) page.count.textContent = countLabel(visible.length, page.entries.length);
+
+  page.bar?.querySelectorAll("[data-stack]").forEach((button) => {
+    const pressed = normalizeSlug(button.dataset.stack) === (stack ?? "");
+    button.setAttribute("aria-pressed", String(pressed));
+  });
+
+  if (page.empty) page.empty.hidden = visible.length !== 0;
+
+  syncStage(visible);
+
+  const project = urlState?.project && page.bySlug.has(urlState.project) ? urlState.project : null;
+  syncDialog(project);
+}
+
+function openFromRow(row) {
+  const slug = row.dataset.projectSlug;
+  const urlState = parseUrlState(location);
+  const next = buildUrl({ pathname: location.pathname, stack: urlState.stack, project: slug });
+  const current = `${location.pathname}${location.search}${location.hash}`;
+
+  if (next !== current) history.pushState({ dialog: slug }, "", next);
+  applyUrlState(parseUrlState(location));
+}
+
+function pushFilter(stack) {
+  const urlState = parseUrlState(location);
+  const next = buildUrl({ pathname: location.pathname, stack, project: urlState.project });
+  const current = `${location.pathname}${location.search}${location.hash}`;
+
+  if (next !== current) history.pushState(history.state, "", next);
+  applyUrlState(parseUrlState(location));
+}
+
+function canonicalize(options) {
+  const urlState = parseUrlState(location);
+  const hadHash = location.hash !== "";
+  const knownStack = urlState.stack && options.some((option) => option.slug === urlState.stack);
+  const knownProject = urlState.project && page.bySlug.has(urlState.project) ? urlState.project : null;
+  const next = { stack: knownStack ? urlState.stack : null, project: knownProject };
+  const canonical = buildUrl({ pathname: location.pathname, ...next });
+  const current = `${location.pathname}${location.search}${location.hash}`;
+
+  if (canonical !== current) history.replaceState(history.state, "", canonical);
+  return { projectRemoved: hadHash && !knownProject };
+}
+
+function buildFilter(options) {
+  const bar = document.querySelector("#filter-bar");
+  if (!bar) return;
+
+  options.forEach(({ slug, label }) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "filter-tag";
+    button.dataset.stack = slug;
+    button.textContent = label;
+    button.setAttribute("aria-pressed", "false");
+    bar.append(button);
+  });
+
+  page.bar = bar;
+  page.count = document.querySelector("#filter-count");
+  page.empty = document.querySelector("#projects-empty");
+  page.clear = document.querySelector("#filter-clear");
+}
+
+function bindFilters() {
+  page.bar?.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-stack]");
+    if (!button || !page.bar.contains(button)) return;
+    pushFilter(normalizeSlug(button.dataset.stack) || null);
+  });
+
+  page.clear?.addEventListener("click", () => {
+    pushFilter(null);
+    page.bar?.querySelector('[data-stack=""]')?.focus();
+  });
+
+  addEventListener("popstate", () => applyUrlState(parseUrlState(location)));
+}
+
+function bindDialog() {
+  const dialog = document.querySelector("#project-dialog");
+  if (!dialog) return;
+
+  page.dialog = dialog;
+  dialog.querySelector("[data-dialog-close]")?.addEventListener("click", requestClose);
+  dialog.addEventListener("click", (event) => {
+    if (event.target === dialog) requestClose();
+  });
+  dialog.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    requestClose();
+  });
+  dialog.addEventListener("close", unlockScroll);
+}
+
+function bindProjectOpening() {
+  const list = document.querySelector(".project-list");
+  if (!list) return;
+
+  page.rows.forEach((row) => {
+    const button = row.querySelector(".project-open");
+    if (!button) return;
+    const title = row.querySelector("h3")?.textContent?.trim();
+    if (title) button.setAttribute("aria-label", `Abrir ficha: ${title}`);
+    button.hidden = false;
+  });
+
+  list.addEventListener("click", (event) => {
+    const button = event.target.closest(".project-open");
+    if (!button || !list.contains(button)) return;
+    const row = button.closest("[data-project-slug]");
+    if (row) openFromRow(row);
+  });
+}
+
+function bindIndexPreview(rows, stage) {
+  const list = document.querySelector(".project-list");
+  if (!list || !stage || !rows.length) return;
+
+  const finePointer = matchMedia("(hover: hover) and (pointer: fine)");
+  const stageVisible = matchMedia("(min-width: 769px)");
+
+  const show = (row) => {
+    const slug = row?.dataset.projectSlug;
+    if (!slug || slug === stage.dataset.slug || !stageVisible.matches) return;
+    paintStage(stage, readProject(row));
+  };
+
+  list.addEventListener("pointerover", (event) => {
+    if (!finePointer.matches) return;
+    show(event.target.closest("[data-project-slug]"));
+  });
+
+  list.addEventListener("focusin", (event) => {
+    show(event.target.closest("[data-project-slug]"));
+  });
+
+  const featured = findFeaturedSlug(rows);
+  const row = rows.find((item) => item.dataset.projectSlug === featured) ?? rows[0];
+  paintStage(stage, readProject(row));
+}
+
+function buildPaletteItems() {
+  const items = [];
+
+  page.entries.forEach(({ slug, data }) => {
+    items.push({
+      kind: "project",
+      title: data.title,
+      hint: formatValue(data.stacks),
+      action: "project",
+      slug,
+    });
+  });
+
+  collectStackOptions(page.entries).forEach(({ slug, label }) => {
+    items.push({ kind: "stack", title: label, hint: "Filtrar projetos", action: "stack", slug });
+  });
+
+  document.querySelectorAll("[data-section][data-section-label]").forEach((section) => {
+    if (!section.id) return;
+    items.push({
+      kind: "section",
+      title: section.dataset.sectionLabel,
+      hint: "Ir para a seção",
+      action: "section",
+      id: section.id,
+    });
+  });
+
+  return items;
+}
+
+function syncPaletteSelection(scroll = false) {
+  const options = [...palette.list.children];
+
+  options.forEach((option, index) => {
+    const active = index === palette.index;
+    option.classList.toggle("is-active", active);
+    option.setAttribute("aria-selected", String(active));
+  });
+
+  const active = options[palette.index];
+  if (active) {
+    palette.input?.setAttribute("aria-activedescendant", active.id);
+    if (scroll) active.scrollIntoView({ block: "nearest" });
+  } else {
+    palette.input?.removeAttribute("aria-activedescendant");
+  }
+}
+
+function renderPaletteResults(query) {
+  const trimmed = typeof query === "string" ? query.trim() : "";
+  palette.results = trimmed ? searchItems(palette.items, trimmed) : palette.items;
+  palette.list.replaceChildren();
+
+  palette.results.forEach((item, index) => {
+    const option = document.createElement("li");
+    option.className = "command-option";
+    option.id = `command-option-${index}`;
+    option.setAttribute("role", "option");
+    option.setAttribute("aria-selected", "false");
+
+    const title = document.createElement("span");
+    title.className = "command-option-title";
+    title.textContent = item.title;
+
+    const kind = document.createElement("span");
+    kind.className = "command-option-kind";
+    kind.textContent = paletteKindLabels[item.kind] ?? "";
+
+    const hint = document.createElement("span");
+    hint.className = "command-option-hint";
+    hint.textContent = item.hint ?? "";
+
+    option.append(title, hint, kind);
+    palette.list.append(option);
+  });
+
+  palette.index = palette.results.length ? 0 : -1;
+  palette.count.textContent = resultLabel(palette.results.length);
+  palette.empty.hidden = palette.results.length !== 0;
+  syncPaletteSelection();
+}
+
+function movePaletteSelection(delta) {
+  const next = moveSelection(palette.index, delta, palette.results.length);
+  if (next < 0) return;
+  palette.index = next;
+  syncPaletteSelection(true);
+}
+
+function closePalette() {
+  if (palette.dialog?.open) palette.dialog.close();
+}
+
+function openPalette({ query = "", opener = null } = {}) {
+  const dialog = palette.dialog;
+  if (!dialog || dialog.open || page.dialog?.open) return;
+
+  palette.opener = opener instanceof HTMLElement && opener !== document.body ? opener : null;
+  lockScroll();
+  dialog.showModal();
+  palette.input.value = query;
+  renderPaletteResults(query);
+  palette.input.focus({ preventScroll: true });
+  const end = palette.input.value.length;
+  palette.input.setSelectionRange(end, end);
+}
+
+function activatePaletteItem(index) {
+  const item = palette.results[index];
+  if (!item) return;
+
+  closePalette();
+
+  if (item.action === "project") {
+    const entry = page.bySlug.get(item.slug);
+    if (entry) openFromRow(entry.row);
+    return;
+  }
+
+  if (item.action === "stack") {
+    pushFilter(item.slug);
+    document.querySelector("#projetos")?.scrollIntoView({ block: "start" });
+    return;
+  }
+
+  if (item.action === "section") location.hash = item.id;
+}
+
+function bindPalette() {
+  const dialog = document.querySelector("#command-palette");
+  if (!dialog) return;
+
+  palette.dialog = dialog;
+  palette.input = dialog.querySelector("#command-search");
+  palette.list = dialog.querySelector("#command-list");
+  palette.count = dialog.querySelector("#command-count");
+  palette.empty = dialog.querySelector("#command-empty");
+  palette.items = buildPaletteItems();
+
+  dialog.querySelector("[data-command-close]")?.addEventListener("click", closePalette);
+  dialog.addEventListener("click", (event) => {
+    if (event.target === dialog) closePalette();
+  });
+  dialog.addEventListener("close", () => {
+    if (!page.dialog?.open) unlockScroll();
+    const opener = palette.opener;
+    palette.opener = null;
+    if (opener?.isConnected && !page.dialog?.open) opener.focus({ preventScroll: true });
+  });
+
+  palette.input?.addEventListener("input", () => renderPaletteResults(palette.input.value));
+
+  dialog.addEventListener("keydown", (event) => {
+    const hasResults = palette.results.length > 0;
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closePalette();
+      return;
+    }
+
+    if (event.key === "Enter" && event.target !== palette.input) return;
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      movePaletteSelection(1);
+      return;
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      movePaletteSelection(-1);
+      return;
+    }
+
+    if (event.key === "Home" && hasResults) {
+      event.preventDefault();
+      palette.index = 0;
+      syncPaletteSelection(true);
+      return;
+    }
+
+    if (event.key === "End" && hasResults) {
+      event.preventDefault();
+      palette.index = palette.results.length - 1;
+      syncPaletteSelection(true);
+      return;
+    }
+
+    if (event.key === "Enter") {
+      event.preventDefault();
+      activatePaletteItem(palette.index);
+    }
+  });
+
+  palette.list?.addEventListener("click", (event) => {
+    const option = event.target.closest('[role="option"]');
+    if (!option) return;
+    activatePaletteItem([...palette.list.children].indexOf(option));
+  });
+
+  palette.list?.addEventListener("pointerover", (event) => {
+    const option = event.target.closest('[role="option"]');
+    if (!option) return;
+    palette.index = [...palette.list.children].indexOf(option);
+    syncPaletteSelection();
+  });
+}
+
+function bindGlobalSearch() {
+  const heroInput = document.querySelector("#hero-search");
+
+  heroInput?.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== "ArrowDown") return;
+    event.preventDefault();
+    openPalette({ query: heroInput.value, opener: heroInput });
+  });
+
+  addEventListener("keydown", (event) => {
+    if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
+    if (typeof event.key !== "string" || event.key.toLowerCase() !== "k") return;
+    if (page.dialog?.open) return;
+
+    event.preventDefault();
+    if (palette.dialog?.open) closePalette();
+    else openPalette({ opener: document.activeElement });
+  });
+}
+
+function readStoredTheme() {
+  try {
+    const stored = localStorage.getItem(THEME_KEY);
+    return stored === "paper" || stored === "ink" ? stored : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function storeTheme(value) {
+  try {
+    localStorage.setItem(THEME_KEY, value);
+  } catch (error) {
+    // Sem persistência: o tema vale só nesta sessão.
+  }
+}
+
+function systemTheme() {
+  return matchMedia("(prefers-color-scheme: light)").matches ? "paper" : "ink";
+}
+
+function syncThemeControls() {
+  theme.toggle?.setAttribute("aria-pressed", String(theme.current === "paper"));
+
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute("content", theme.current === "paper" ? "#f1f0e8" : "#0b1d27");
+}
+
+function applyTheme(value) {
+  const next = value === "paper" ? "paper" : "ink";
+  document.documentElement.dataset.theme = next;
+  theme.current = next;
+  syncThemeControls();
+}
+
+function initTheme() {
+  theme.toggle = document.querySelector("#theme-toggle");
+  theme.current = resolveTheme({ stored: readStoredTheme(), systemDark: systemTheme() === "ink" });
+  syncThemeControls();
+
+  theme.toggle?.addEventListener("click", () => {
+    applyTheme(nextTheme(theme.current));
+    storeTheme(theme.current);
+  });
+}
+
+function announceCopy(message) {
+  const status = contact.status;
+  if (!status) return;
+
+  if (contact.timer !== null) clearTimeout(contact.timer);
+  status.textContent = message;
+  contact.timer = setTimeout(() => {
+    status.textContent = "";
+    contact.timer = null;
+  }, COPY_FEEDBACK_MS);
+}
+
+function readContactEmail() {
+  const link = document.querySelector("#contact-links a[href^='mailto:']");
+  const address = link?.getAttribute("href")?.replace(/^mailto:/i, "").split("?")[0]?.trim();
+  return address ?? "";
+}
+
+async function copyContactEmail() {
+  const email = readContactEmail();
+  const request = contact.request + 1;
+  contact.request = request;
+
+  try {
+    if (!email) throw new Error("Endereço de e-mail ausente");
+    if (!navigator.clipboard || typeof navigator.clipboard.writeText !== "function") {
+      throw new Error("Área de transferência indisponível");
+    }
+    await navigator.clipboard.writeText(email);
+    if (request !== contact.request) return;
+    announceCopy("Copiado");
+  } catch (error) {
+    if (request !== contact.request) return;
+    announceCopy("Não foi possível copiar");
+  }
+}
+
+function initContact() {
+  contact.button = document.querySelector("#copy-email");
+  contact.status = document.querySelector("#copy-status");
+  contact.button?.addEventListener("click", copyContactEmail);
+}
+
+function announceBuild(message) {
+  if (!scene.status) return;
+  if (scene.timer !== null) clearTimeout(scene.timer);
+  scene.status.textContent = message;
+  scene.timer = setTimeout(() => {
+    if (scene.status) scene.status.textContent = "";
+    scene.timer = null;
+  }, COPY_FEEDBACK_MS);
+}
+
+function collectSceneTargets() {
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const seen = new Set();
+  const targets = [];
+
+  SCENE_TARGETS.forEach((selector) => {
+    const element = document.querySelector(selector);
+    if (!element || seen.has(element)) return;
+    seen.add(element);
+
+    const rect = element.getBoundingClientRect();
+    if (rect.width < 40 || rect.height < 16) return;
+    if (rect.bottom <= 0 || rect.top >= height || rect.right <= 0 || rect.left >= width) return;
+    targets.push({ element, rect });
+  });
+
+  if (targets.length) return targets;
+  return [{ element: document.documentElement, rect: document.documentElement.getBoundingClientRect() }];
+}
+
+function planSceneLegs(targets) {
+  return Array.from({ length: SCENE_LEGS }, (_, index) => targets[index % targets.length]);
+}
+
+function createCursor(index) {
+  const node = document.createElement("div");
+  node.className = "agent-cursor";
+  node.style.setProperty("--agent-color", SCENE_COLORS[index % SCENE_COLORS.length]);
+  node.innerHTML = '<svg aria-hidden="true" viewBox="0 0 20 20"><path d="M3 2.5 17 9.6l-5.9 1.7-1.8 5.9z" /></svg>';
+
+  const label = document.createElement("span");
+  label.className = "agent-label";
+  label.textContent = SCENE_LABELS[index % SCENE_LABELS.length];
+  node.append(label);
+
+  return { node, label };
+}
+
+function easeOutCubic(value) {
+  const t = Math.min(1, Math.max(0, value));
+  return 1 - (1 - t) ** 3;
+}
+
+function paintSceneSelection(leg, index) {
+  const { selection, measure } = scene;
+  if (!selection || !measure || !leg) return;
+
+  const { rect } = leg;
+  selection.style.setProperty("--agent-color", SCENE_COLORS[index % SCENE_COLORS.length]);
+  selection.style.width = `${rect.width}px`;
+  selection.style.height = `${rect.height}px`;
+  selection.style.transform = `translate3d(${rect.x}px, ${rect.y}px, 0)`;
+  selection.classList.add("is-active");
+  measure.textContent = getBlockSizeLabel(rect);
+}
+
+function drawScene(elapsed) {
+  const info = getSceneLeg(elapsed, SCENE_DURATION_MS, scene.legs.length);
+  const index = Math.min(scene.legs.length - 1, info.index);
+  const leg = scene.legs[index];
+  const eased = easeOutCubic(info.progress / 0.55);
+
+  if (index !== scene.currentLeg) {
+    scene.currentLeg = index;
+    paintSceneSelection(leg, index);
+  }
+
+  scene.cursors.forEach((cursor, slot) => {
+    const from = index === 0
+      ? getAgentIdlePosition(slot, scene.count, window.innerWidth, window.innerHeight)
+      : getSceneCursorPoint(scene.legs[index - 1].rect, slot, scene.count);
+    const to = getSceneCursorPoint(leg.rect, slot, scene.count);
+    const x = from.x + (to.x - from.x) * eased;
+    const y = from.y + (to.y - from.y) * eased;
+
+    cursor.node.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+    cursor.node.classList.toggle("is-active", eased > 0.5);
+  });
+}
+
+function tickScene(now) {
+  if (!scene.running) return;
+  scene.frame = null;
+
+  const elapsed = now - scene.startedAt;
+  drawScene(elapsed);
+
+  if (getSceneLeg(elapsed, SCENE_DURATION_MS, scene.legs.length).done) {
+    stopScene("Montagem concluída");
+    return;
+  }
+
+  scene.frame = requestAnimationFrame(tickScene);
+}
+
+function handleSceneInterrupt() {
+  if (scene.running) stopScene("Montagem interrompida");
+}
+
+function stopScene(message = "Montagem interrompida") {
+  if (!scene.running) return;
+
+  scene.running = false;
+  scene.stoppedAt = performance.now();
+
+  if (scene.frame !== null) {
+    cancelAnimationFrame(scene.frame);
+    scene.frame = null;
+  }
+
+  if (scene.endTimer !== null) {
+    clearTimeout(scene.endTimer);
+    scene.endTimer = null;
+  }
+
+  SCENE_EVENTS.forEach((name) => {
+    window.removeEventListener(name, handleSceneInterrupt, { capture: true });
+  });
+
+  scene.layer?.replaceChildren();
+  scene.cursors = [];
+  scene.selection = null;
+  scene.measure = null;
+  scene.legs = [];
+  scene.currentLeg = -1;
+
+  if (message) announceBuild(message);
+}
+
+function startScene() {
+  if (scene.running || !scene.layer) return;
+
+  const targets = collectSceneTargets();
+  const count = getInitialAgentCount({ width: window.innerWidth, height: window.innerHeight });
+
+  scene.layer.replaceChildren();
+  scene.legs = planSceneLegs(targets);
+  scene.count = count;
+  scene.currentLeg = -1;
+
+  const selection = document.createElement("div");
+  selection.className = "build-selection";
+  const measure = document.createElement("span");
+  measure.className = "build-measure";
+  selection.append(measure);
+
+  scene.selection = selection;
+  scene.measure = measure;
+  scene.cursors = Array.from({ length: count }, (_, index) => createCursor(index));
+  scene.layer.append(selection, ...scene.cursors.map((cursor) => cursor.node));
+
+  scene.running = true;
+  scene.startedAt = performance.now();
+  SCENE_EVENTS.forEach((name) => {
+    window.addEventListener(name, handleSceneInterrupt, { capture: true, passive: true });
+  });
+
+  announceBuild(`Montagem em cena: ${count} cursores`);
+  scene.frame = requestAnimationFrame(tickScene);
+  scene.endTimer = setTimeout(() => stopScene("Montagem concluída"), SCENE_DURATION_MS + 400);
+}
+
+function initScene() {
+  scene.button = document.querySelector("#scene-button");
+  scene.layer = document.querySelector("#agent-layer");
+  scene.status = document.querySelector("#build-status");
+  if (!scene.button || !scene.layer) return;
+
+  scene.motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const sync = () => {
+    const enabled = shouldAnimate(scene.motion.matches)
+      && !document.documentElement.classList.contains("motion-reduced");
+    scene.button.hidden = !enabled;
+    if (!enabled) stopScene(null);
+  };
+
+  sync();
+  scene.button.addEventListener("click", () => {
+    if (scene.running) {
+      stopScene("Montagem interrompida");
+      return;
+    }
+    if (performance.now() - scene.stoppedAt < 400) return;
+    startScene();
+  });
+  scene.motion.addEventListener?.("change", sync);
+}
+
+function boot() {
+  try {
+    initTheme();
+    initContact();
+    initScene();
+
+    const year = document.querySelector("#year");
+    if (year) year.textContent = String(new Date().getFullYear());
+
+    page.rows = [...document.querySelectorAll("[data-project-slug]")];
+    if (!page.rows.length) return;
+
+    page.entries = page.rows.map(readProject);
+    page.bySlug = new Map(page.entries.map((entry) => [entry.slug, entry]));
+    const options = collectStackOptions(page.entries);
+
+    const { projectRemoved } = canonicalize(options);
+
+    buildFilter(options);
+    bindFilters();
+    bindDialog();
+    bindProjectOpening();
+    bindPalette();
+    bindGlobalSearch();
+
+    initRowPreviews(page.rows);
+
+    const heroStage = document.querySelector("[data-preview-stage]");
+    if (heroStage) {
+      const featured = findFeaturedSlug(page.rows);
+      const row = page.rows.find((item) => item.dataset.projectSlug === featured) ?? page.rows[0];
+      paintStage(heroStage, readProject(row));
+    }
+
+    page.indexStage = document.querySelector("[data-index-stage]");
+    if (page.indexStage) bindIndexPreview(page.rows, page.indexStage);
+
+    applyUrlState(parseUrlState(location));
+    if (projectRemoved) focusSection(false);
+  } catch (error) {
+    console.error("Falha ao iniciar o portfólio:", error);
+  }
+}
+
+boot();
