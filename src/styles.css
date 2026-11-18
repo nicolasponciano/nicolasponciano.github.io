@@ -269,6 +269,7 @@ svg {
   height: 33px;
   align-items: center;
   justify-content: center;
+  transform: translateY(-1px);
 }
 
 .wordmark-logo {
@@ -2434,6 +2435,7 @@ html.motion-reduced :is(.theme-toggle, .button, .filter-tag, .filter-clear, .pro
   .wordmark-mark {
     width: 25px;
     height: 29px;
+    transform: translateY(-0.5px);
   }
 
   .site-nav .nav-contact {
