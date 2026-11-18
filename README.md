@@ -10,10 +10,11 @@ Portfólio de Nicolas Ponciano, desenvolvedor de software full stack. A página 
 
 - **Conteúdo primeiro**: título, nome, resumo, fatos verificáveis, ações, busca e palco de prévia visíveis sem interação.
 - **Herói com nome dominante**: `h1` "Nicolas Ponciano", papel como kicker e três fatos do currículo.
-- **Prévias esquemáticas**: cada projeto mostra um esquema da sua funcionalidade real, identificado como "Esquemático", composto em HTML e CSS a partir dos dados.
+- **Prévias conceituais**: cada projeto mostra um esquema da sua funcionalidade real, identificado como "Prévia conceitual", composto em HTML e CSS a partir dos dados, com quatro capacidades por projeto.
 - **Pager manual**: anterior e próximo trocam a prévia do herói em ordem circular, com contador `01 / 03` e anúncio em `aria-live`; não há autoplay, timer nem mudança de URL.
 - **Filtros por tecnologia**: tags com `aria-pressed`, contagem `N de M` e estado vazio com "Limpar filtro".
-- **Fichas de projeto**: `<dialog>` com papel, desafio, solução, stack, ano e links, aberta pela linha ou por `#projeto/<slug>`.
+- **Fichas de projeto**: `<dialog>` com papel, desafio, solução, stack, ano e links, aberta pela linha ou por `#projeto/<slug>`. Projetos privados exibem "Código privado" em vez de link.
+- **Links antigos**: `#projeto/projeto-02` canonicaliza para `#projeto/open-mind` sem criar entrada no histórico; `projeto-01` e `projeto-03`, que não têm sucessor, removem o hash e mostram um aviso acessível.
 - **Palette**: busca por comando em `Ctrl+K` (`⌘+K`), sem diferenciar caixa ou acento, com navegação por setas, Home, End, Enter e Esc.
 - **Temas tinta e papel**: alternância manual persistida em `localStorage`, com `prefers-color-scheme` como padrão.
 - **Trajetória**: três experiências e três formações, extraídas do currículo, em lista ordenada.
@@ -25,9 +26,11 @@ Portfólio de Nicolas Ponciano, desenvolvedor de software full stack. A página 
 
 | Projeto | Ano | Stack | Repositório |
 |---|---|---|---|
-| ClienteAPI | 2025 | C#, .NET 8, SQL Server | https://github.com/nicolasponciano/ClienteAPI |
+| MarcAi | 2026 | Next.js, TypeScript, PostgreSQL | Código privado |
+| Seirei | 2026 | Next.js, TypeScript, Supabase | Código privado |
 | Open Mind | 2026 | TypeScript, Node.js, OpenCode | https://github.com/nicolasponciano/open-mind |
-| Skill Upgrader | 2026 | Markdown, OpenCode, Git | https://github.com/nicolasponciano/skill-upgrader |
+
+MarcAi é o projeto em destaque no herói. A seleção foi aprovada em 2026-11-18 e substituiu ClienteAPI e Skill Upgrader, que saíram do portfólio.
 
 ## Tecnologias
 
@@ -90,7 +93,7 @@ Abrir `http://127.0.0.1:4173/`. Qualquer servidor estático funciona; abrir o ar
 npm test
 ```
 
-São 101 testes: funções puras, dados, markup e contratos de CSS. Cinco testes de publicação ficam pulados por padrão.
+São 126 testes: funções puras, dados, markup e contratos de CSS. Seis testes de publicação ficam pulados por padrão.
 
 Para incluir a checagem de publicação (sem placeholders, com e-mail válido, projetos completos e stacks reais):
 
@@ -108,15 +111,16 @@ Essa checagem deve passar antes de publicar.
 - **Trajetória**: editar a seção `#trajetoria` em `index.html`.
 - **Tema visual**: editar os tokens em `:root` e em `[data-theme="paper"]` de `src/styles.css`.
 
-O esquema usa no máximo cinco itens, com `tag`, `text` e um `foot` de contexto. Um projeto sem esquema válido cai no bloco neutro do tipo `panel`, sem erro no console. Os dados do esquema não repetem título, ano, stack ou resumo já presentes na linha.
+O esquema usa no máximo quatro itens, com `label`, `note`, `purpose` e `items`. Um projeto sem esquema válido cai no bloco neutro do tipo `panel`, sem erro no console. Os dados do esquema não repetem título, ano, stack ou resumo já presentes na linha. O estado "Código privado" vem de `codeVisibility`, não da ausência de link.
 
 ## Acessibilidade e responsividade
 
-- Layout verificado em 390, 768, 1024 e 1440 px, sem rolagem horizontal.
+- Layout verificado em 360, 390, 768, 1024 e 1440 px, sem rolagem horizontal.
 - Em 390 px o nome fica em uma linha, a linha de fatos empilha e o palco com pager aparece inteiro abaixo da cópia.
-- Em 1024 px o herói mantém duas colunas, o nome não é truncado e o palco tem pelo menos 360 px.
-- O palco do herói tem altura estável de 380 px, então o pager não se desloca ao trocar de projeto.
-- Contraste mínimo medido de 5,53:1 no tema papel e 6,61:1 no tema tinta.
+- Em 1024 px o herói mantém duas colunas, o nome não é truncado e o palco tem 486 px de altura.
+- O palco tem altura comum às três prévias nas larguras de contrato: 520 px em 360 e 390, 486 px entre 401 e 650, 410 px em 768, 486 px em 1024 e 432 px em 1440. O pager fica no mesmo Y ao trocar de projeto em todas as faixas.
+- Hash alterado na mesma página também passa pela canonicalização: alias antigo abre o projeto e corrige a URL, projeto removido limpa o hash e mostra o aviso, e hash desconhecido não gera aviso.
+- Contraste mínimo medido na página: 6,61:1 no tema tinta (nota do contato) e 5,53:1 no tema papel (nota e rodapé do palco, contador do pager). Dentro das prévias conceituais, o menor par é o selo, com 7,13:1 no tinta e 5,53:1 no papel.
 - Ordem de foco segue a ordem visual; todos os controles têm foco visível.
 - Fichas e palette contêm o foco enquanto abertas e devolvem o foco ao fechar.
 - Com movimento reduzido, a troca de prévia é instantânea e a cena de montagem não é oferecida.

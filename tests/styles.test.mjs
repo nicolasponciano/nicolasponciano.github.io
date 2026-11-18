@@ -72,6 +72,7 @@ test("sem JavaScript os controles mortos ficam ocultos", () => {
   for (const selector of [
     ".hero-search",
     ".hero-stage",
+    ".index-stage",
     ".row-preview",
     ".filter-bar",
     ".filter-count",
@@ -199,17 +200,34 @@ test("a troca de prévia dura 160 ms", () => {
   assert.match(css, /@keyframes preview-swap/);
 });
 
-test("o esquema tem lista, item, tag, texto e rodapé com hierarquia visual", () => {
+test("a prévia tem propósito, lista, item e numeração com hierarquia visual", () => {
   const css = readCss();
+  assert.match(css, /\.preview-purpose\s*{[^}]*color:\s*var\(--paper\)/);
+  assert.match(css, /\.preview-purpose\s*{[^}]*font-size:\s*15px/);
+  assert.match(css, /\.preview-purpose\s*{[^}]*line-height:\s*1\.45/);
+  assert.match(css, /\.preview-purpose\s*{[^}]*max-width:\s*36ch/);
   assert.match(css, /\.schematic-list\s*{[^}]*display:\s*grid/);
   assert.match(css, /\.schematic-list\s*{[^}]*list-style:\s*none/);
   assert.match(css, /\.schematic-item\s*{[^}]*display:\s*grid/);
-  assert.match(css, /\.schematic-item\s*{[^}]*border:\s*1px solid var\(--line\)/);
-  assert.match(css, /\.schematic-tag\s*{[^}]*color:\s*var\(--mint-text\)/);
-  assert.match(css, /\.schematic-tag\s*{[^}]*text-transform:\s*uppercase/);
-  assert.match(css, /\.schematic-text\s*{[^}]*font-size:\s*12px/);
-  assert.match(css, /\.schematic-foot\s*{[^}]*border-top:\s*1px solid var\(--line\)/);
-  assert.match(css, /\.schematic-foot\s*{[^}]*color:\s*var\(--muted\)/);
+  assert.match(css, /\.schematic-item\s*{[^}]*align-items:\s*baseline/, "numeração e texto dividem a mesma linha de base");
+  assert.match(css, /\.schematic-index\s*{[^}]*color:\s*var\(--mint-text\)/);
+  assert.match(css, /\.schematic-index\s*{[^}]*font-variant-numeric:\s*tabular-nums/);
+  assert.match(css, /\.schematic-text\s*{[^}]*font-size:\s*12\.5px/);
+  assert.match(css, /\.schematic-text\s*{[^}]*line-height:\s*1\.45/);
+  assert.match(css, /\.schematic-text\s*{[^}]*color:\s*var\(--paper-dim\)/, "capacidade fica um nível abaixo do propósito");
+  assert.match(css, /@media \(min-width: 1200px\)\s*{\s*\.schematic-text\s*{[^}]*font-size:\s*13px/);
+  assert.doesNotMatch(css, /\.schematic-foot/, "o rodapé interno saiu do contrato");
+});
+
+test("a capacidade perde borda, fundo e coluna fixa de rótulo", () => {
+  const css = readCss();
+  const item = readRule(css, ".schematic-item {");
+  assert.doesNotMatch(item, /border:\s*1px solid var\(--line\)/, "a capacidade não é cartão");
+  assert.match(item, /background:\s*none/, "a capacidade não tem fundo próprio");
+  assert.match(item, /border-top:\s*1px solid var\(--line\)/, "o filete separa capacidades");
+  assert.match(css, /\.schematic-item:first-child\s*{[^}]*border-top:\s*0/, "o primeiro item não ganha filete acima");
+  assert.match(css, /\.schematic-item:last-child\s*{[^}]*padding-bottom:\s*0/, "o último item encosta no rodapé do canvas");
+  assert.doesNotMatch(css, /\.stage-canvas--schematic[\s\S]{0,400}?grid-template-columns:\s*repeat\(2/, "a lista é uma coluna em qualquer largura");
 });
 
 test("o esquema ocupa a área do canvas sem rolagem interna nem deslocamento", () => {
@@ -220,28 +238,92 @@ test("o esquema ocupa a área do canvas sem rolagem interna nem deslocamento", (
   assert.doesNotMatch(canvas, /overflow:\s*(auto|scroll)/);
 
   assert.match(css, /\.preview-stage\.has-schematic\s*{[^}]*aspect-ratio:\s*auto/, "o palco cresce com o esquema");
-  assert.match(css, /\.hero-stage\.has-schematic\s*{[^}]*min-height:\s*380px/, "o palco do hero mantém altura estável");
+  assert.match(css, /\.hero-stage\.has-schematic\s*{[^}]*min-height:\s*432px/, "o palco do hero mantém altura estável");
+  assert.match(
+    css,
+    /@media \(max-width: 400px\)\s*{\s*\.hero-stage\.has-schematic\s*{[^}]*min-height:\s*520px/,
+    "em 390 px o chrome quebrado pede altura comum maior",
+  );
+  assert.match(css, /@media \(max-width: 377px\)\s*{\s*\.hero-stage\.has-schematic\s*{[^}]*min-height:\s*520px/);
+  assert.match(css, /@media \(max-width: 371px\)\s*{\s*\.hero-stage\.has-schematic\s*{[^}]*min-height:\s*520px/);
+  assert.match(
+    css,
+    /@media \(max-width: 650px\)\s*{\s*\.hero-stage\.has-schematic\s*{[^}]*min-height:\s*486px/,
+    "entre 401 e 650 px a altura comum cobre a quebra do Seirei",
+  );
   const heroStages = [...css.matchAll(/\.hero-stage\.has-schematic\s*{[^}]*}/g)];
-  assert.equal(heroStages.length, 1, "a altura do palco do hero é declarada uma vez só");
+  assert.equal(heroStages.length, 7, "a altura do hero tem uma regra base, duas faixas largas e quatro faixas estreitas");
+  assert.doesNotMatch(canvas, /overflow(-y)?:\s*(auto|scroll|hidden)/, "o conteúdo não é cortado nem rola dentro do canvas");
+  assert.doesNotMatch(css, /\.preview-purpose[^{]*{[^}]*line-clamp/);
+  assert.doesNotMatch(css, /\.schematic-text[^{]*{[^}]*line-clamp/);
+  assert.doesNotMatch(css, /\.stage-canvas--schematic[^{]*{[^}]*max-height/);
   assert.match(css, /\.row-preview\.has-schematic \.stage-canvas\s*{[^}]*aspect-ratio:\s*auto/);
   assert.match(css, /\.stage-canvas--schematic::before,[\s\S]*?display:\s*none/, "os conectores do fluxo neutro não aparecem no esquema");
 });
 
-test("o rótulo do esquema cabe inteiro na coluna", () => {
+test("o hero no celular afasta o selo do filete e densifica o miolo", () => {
+  const css = readCss();
+  const ranges = mediaRanges(css, "@media (max-width: 480px)");
+  const block = ranges.map(([open, close]) => css.slice(open, close)).join("\n");
+  assert.match(block, /\.hero-stage \.stage-chrome\s*{[^}]*padding-block:\s*5px/, "o chrome quebrado ganha respiro vertical");
+  assert.match(block, /\.hero-stage \.stage-canvas--schematic\s*{[^}]*gap:\s*16px/);
+  assert.match(block, /\.hero-stage \.stage-canvas--schematic\s*{[^}]*padding:\s*16px 14px/);
+});
+
+test("a prévia compacta usa densidade própria e não corta o rodapé", () => {
+  const css = readCss();
+  const ranges = mediaRanges(css, "@media (max-width: 768px)");
+  const block = ranges.map(([open, close]) => css.slice(open, close)).join("\n");
+  assert.ok(block, "o bloco de 768 px precisa existir");
+  assert.match(block, /\.row-preview \.preview-purpose\s*{[^}]*font-size:\s*14px/);
+  assert.match(block, /\.row-preview \.preview-purpose\s*{[^}]*max-width:\s*100%/);
+  assert.match(block, /\.row-preview \.stage-canvas--schematic\s*{[^}]*gap:\s*14px/);
+  assert.match(block, /\.row-preview \.schematic-item\s*{[^}]*padding:\s*8px 0/);
+  assert.match(block, /\.row-preview \.schematic-item\s*{[^}]*column-gap:\s*8px/);
+  assert.match(block, /\.row-preview-head\s*{[^}]*flex-wrap:\s*wrap/);
+  assert.match(block, /\.row-preview-head\s*{[^}]*padding-block:\s*8px/);
+  assert.match(block, /\.row-preview-head > span:last-child\s*{[^}]*white-space:\s*normal/, "a stack quebra em vez de reticências");
+  assert.doesNotMatch(block, /line-clamp|max-height/);
+});
+
+test("a prévia lateral sobe a altura comum conforme a coluna estreita", () => {
+  const css = readCss();
+  assert.match(css, /\.index-stage\.has-schematic\s*{[^}]*min-height:\s*456px/, "a coluna larga usa a altura medida");
+  assert.match(css, /@media \(max-width: 1024px\)\s*{\s*\.index-stage\.has-schematic\s*{[^}]*min-height:\s*448px/);
+  assert.match(css, /@media \(max-width: 960px\)\s*{\s*\.index-stage\.has-schematic\s*{[^}]*min-height:\s*464px/);
+  assert.match(css, /@media \(max-width: 900px\)\s*{\s*\.index-stage\.has-schematic\s*{[^}]*min-height:\s*560px/);
+  assert.match(css, /\.index-stage \.stage-title\s*{[^}]*flex-basis:\s*100%/, "na coluna estreita o nome ocupa a primeira linha do chrome");
+  assert.match(css, /\.index-stage \.stage-chrome\s*{[^}]*padding-block:\s*6px/, "o chrome quebrado respira");
+});
+
+test("o rodapé da prévia lateral não corta a stack entre 769 e 900 px", () => {
+  const css = readCss();
+  const ranges = mediaRanges(css, "@media (min-width: 769px) and (max-width: 900px)");
+  assert.ok(ranges.length > 0, "a faixa estreita da coluna lateral precisa de regra própria");
+  const block = ranges.map(([open, close]) => css.slice(open, close)).join("\n");
+  assert.match(block, /\.index-stage \.stage-foot > span:last-child\s*{[^}]*white-space:\s*normal/);
+  assert.match(block, /\.index-stage \.stage-foot > span:last-child\s*{[^}]*overflow:\s*visible/);
+  assert.match(block, /\.index-stage \.stage-foot > span:last-child\s*{[^}]*max-width:\s*100%/);
+  assert.doesNotMatch(block, /text-overflow:\s*ellipsis/, "a stack não termina em reticências");
+});
+
+test("a numeração do esquema cabe na coluna sem empurrar o texto", () => {
   const css = readCss();
   const item = readRule(css, ".schematic-item {");
   const match = item.match(/grid-template-columns:\s*(\d+)px/);
-  assert.ok(match, "a coluna do rótulo precisa de largura fixa");
-  assert.ok(Number(match[1]) >= 76, "a coluna comporta o rótulo mais longo sem corte");
+  assert.ok(match, "a coluna da numeração precisa de largura fixa");
+  assert.ok(Number(match[1]) >= 24, "a coluna comporta dois dígitos sem corte");
+  assert.ok(Number(match[1]) <= 40, "a coluna não rouba espaço do texto");
 });
 
 test("o cabeçalho da prévia da linha não corta a stack no celular", () => {
   const css = readCss();
-  const ranges = mediaRanges(css, "@media (max-width: 720px)");
-  assert.ok(ranges.length > 0, "o breakpoint de 720 px precisa existir");
+  const ranges = mediaRanges(css, "@media (max-width: 768px)");
+  assert.ok(ranges.length > 0, "o breakpoint de 768 px precisa existir");
   const block = ranges.map(([open, close]) => css.slice(open, close)).join("\n");
   assert.match(block, /\.row-preview-head\s*{[^}]*flex-wrap:\s*wrap/, "o cabeçalho quebra em vez de cortar");
   assert.match(block, /\.row-preview-head > span:last-child\s*{[^}]*white-space:\s*normal/);
+  assert.doesNotMatch(block, /text-overflow:\s*ellipsis/, "a stack não termina em reticências");
 });
 
 test("a Trajetória usa hairlines, metadados técnicos e display nos cargos", () => {
@@ -283,12 +365,13 @@ test("o bloco neutro continua estilizado como fallback dos três tipos", () => {
   assert.match(css, /\.stage-canvas--flow \.preview-block\s*{[^}]*position:\s*absolute/);
 });
 
-test("o rótulo Esquemático acompanha o tipo do palco e da prévia de linha", () => {
+test("o selo conceitual acompanha o palco e a prévia de linha", () => {
   const css = readCss();
   assert.match(css, /\.stage-note\s*{[^}]*border:\s*1px solid var\(--line\)/);
   assert.match(css, /\.stage-note\s*{[^}]*color:\s*var\(--muted\)/);
   assert.match(css, /\.row-preview-note\s*{[^}]*border:\s*1px solid var\(--line\)/);
   assert.match(css, /\.stage-chrome\s*{[^}]*justify-content:\s*flex-start/);
+  assert.match(css, /\.stage-chrome\s*{[^}]*flex-wrap:\s*wrap/, "o chrome pode quebrar em larguras pequenas");
   assert.match(css, /\.stage-title\s*{[^}]*margin-right:\s*auto/);
 });
 
@@ -336,10 +419,14 @@ test("os temas papel e tinta trocam tokens e mantêm ficha e palette claras", ()
   assert.match(css, /\.command-palette\s*{[^}]*background:\s*var\(--sheet\)/);
 });
 
-test("o botão de tema tem alvo de 44 px e some sem JavaScript", () => {
+test("o botão de tema tem alvo de 44 px, some sem JavaScript e mantém nome no mobile", () => {
   const css = readCss();
   assert.match(css, /\.theme-toggle\s*{[^}]*min-height:\s*44px/);
   assert.match(css, /\.theme-toggle:focus-visible\s*{[^}]*outline/);
+
+  const label = readRule(css, ".theme-toggle-label");
+  assert.match(label, /clip-path:\s*inset\(50%\)/, "no mobile o rótulo continua no nome acessível");
+  assert.doesNotMatch(label, /display:\s*none/, "esconder o rótulo com display:none apagaria o nome acessível");
 });
 
 test("as tags de filtro respeitam alvo de 44 px e o estado vazio fica oculto", () => {
@@ -348,6 +435,8 @@ test("as tags de filtro respeitam alvo de 44 px e o estado vazio fica oculto", (
   assert.match(css, /\.filter-tag\[aria-pressed="true"\]/);
   assert.match(css, /\.empty-state\[hidden\]\s*{\s*display:\s*none/);
   assert.match(css, /\.project-entry\[hidden\]\s*{\s*display:\s*none/);
+  assert.match(css, /\.project-notice\[hidden\]\s*{\s*display:\s*none/, "o aviso não pode aparecer vazio");
+  assert.match(css, /\.project-notice\s*{[^}]*color:\s*var\(--paper-dim\)/);
   assert.match(css, /\.filter-bar\s*{[^}]*overscroll-behavior-x:\s*contain/);
 });
 

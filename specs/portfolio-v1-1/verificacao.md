@@ -10,10 +10,10 @@ Método: `npm test` e `PUBLICAR=1 npm test`, medição por DOM e estilo computad
 
 | Comando | Resultado |
 |---|---|
-| `npm test` | 101 testes, 96 aprovados, 0 falhas, 5 skip |
-| `PUBLICAR=1 npm test` | 101 aprovados, 0 falhas, 0 skip |
+| `npm test` | 104 testes, 99 aprovados, 0 falhas, 5 skip |
+| `PUBLICAR=1 npm test` | 104 aprovados, 0 falhas, 0 skip |
 
-Nenhum arquivo de teste foi alterado na T-09.
+Nenhum arquivo de teste foi alterado na T-09. Os três testes do ajuste 01 entraram na T-10.
 
 ## 2. Roteiro de `specs/portfolio-interativo/verificacao.md` (itens afetados)
 
@@ -140,6 +140,17 @@ O palco mantém 380 px de altura e o pager no mesmo Y nas três prévias, em tod
 | CA-72 | mínimo 6,61:1 (tinta) e 5,53:1 (papel) | aprovado |
 | CA-73 | sem dependência, build, fonte, imagem ou requisição nova | aprovado |
 
+### Ajuste 01 (CA-74 a CA-79)
+
+| Critério | Evidência | Resultado |
+|---|---|---|
+| CA-74 | tinta exibe "Ativar tema papel"; papel exibe "Ativar tema tinta"; troca na mesma interação | aprovado |
+| CA-75 | nome acessível na árvore AX igual ao texto ("ATIVAR TEMA PAPEL"/"ATIVAR TEMA TINTA"), sem `aria-label`, `aria-pressed` ou `role` | aprovado |
+| CA-76 | 390 px: rótulo recortado, botão 44×44 e nome acessível presente | aprovado |
+| CA-77 | HTML inicial "Ativar tema papel"; `initTheme` sincroniza com armazenamento e sistema antes da interação | aprovado |
+| CA-78 | `localStorage` e `prefers-color-scheme` preservados; cores e temas inalterados | aprovado |
+| CA-79 | botão nativo; Enter e Espaço alternam, mantêm foco, gravam preferência e atualizam `meta[theme-color]` | aprovado |
+
 ### v1.0 preservada (CA-01 a CA-42)
 
 Reexecutados os itens afetados: leitura imediata, prévia por hover/foco sem deslocamento, filtro e URL, ficha e histórico, palette e teclado, movimento, temas, acessibilidade, sem-JS e publicação. Todos passaram. A única substituição declarada é a do `h1`, que agora traz o nome e manda o papel para o kicker.
@@ -159,7 +170,27 @@ Somente documentação, sem tocar em HTML, CSS, JavaScript, dados ou testes:
 - Sem arquivos temporários, logs, capturas, segredos ou credenciais no repositório.
 - `specs/portfolio-v1-1/requirements.md` e `design.md` citam apenas a data de referência do currículo; caminhos locais foram removidos antes do commit.
 
-## 10. Limitações conhecidas
+## 10. Ajuste 01 — botão de tema (T-10)
+
+Validado em Chrome 157 headless por CDP, com `prefers-color-scheme` em escuro e claro, clique, Enter, Espaço, recarga e 390 px.
+
+| Cenário | Tema | Rótulo | `aria-pressed` | `aria-label` | Armazenamento | `meta[theme-color]` |
+|---|---|---|---|---|---|---|
+| Inicial, sistema escuro | tinta | Ativar tema papel | ausente | ausente | nulo | `#0b1d27` |
+| Enter no tinta | papel | Ativar tema tinta | ausente | ausente | `paper` | `#f1f0e8` |
+| Espaço no papel | tinta | Ativar tema papel | ausente | ausente | `ink` | `#0b1d27` |
+| Duas alternâncias + recarga | tinta | Ativar tema papel | ausente | ausente | `ink` | `#0b1d27` |
+| Armazenado `paper` + recarga | papel | Ativar tema tinta | ausente | ausente | `paper` | `#f1f0e8` |
+| Armazenado `ink` + recarga | tinta | Ativar tema papel | ausente | ausente | `ink` | `#0b1d27` |
+| Sem armazenamento, sistema claro | papel | Ativar tema tinta | ausente | ausente | nulo | `#f1f0e8` |
+| 390 px, sistema claro | papel | recortado | ausente | ausente | nulo | `#f1f0e8` |
+
+- Árvore de acessibilidade: `role="button"`, nome "ATIVAR TEMA PAPEL" no tinta e "ATIVAR TEMA TINTA" no papel, sem propriedade `pressed`; em 390 px o nome continua "ATIVAR TEMA TINTA" com o rótulo recortado.
+- Alvo do botão: 183×44 px no desktop e 44×44 px em 390 px. Foco permanece no botão após Enter e Espaço.
+- Nenhuma exceção ou mensagem de erro no console durante carga, duas alternâncias e recarga.
+- Capturas conferidas nos dois temas: papel em `#f1f0e8` com texto em `#0b1d27`; tinta em `#0b1d27` com texto em `#f1f0e8`. Tokens, tipografia e movimento não mudaram.
+
+## 11. Limitações conhecidas (v1.1)
 
 - Chrome headless apenas; sem Firefox, dispositivo físico ou leitor de tela real.
 - O Esc nativo do `dialog` não é reproduzível por CDP; o caminho do app foi validado com evento `cancel` cancelável e o Esc real consta da auditoria da v1.0.
@@ -168,3 +199,213 @@ Somente documentação, sem tocar em HTML, CSS, JavaScript, dados ou testes:
 - A barra de filtros rola na horizontal dentro do contêiner em 390 px, herdado da v1.0.
 - `src/core.js` mantém exportações da cena antiga usadas só por testes (`getProgress`, `normalizeSpeed`, `getPauseLabel` e outras). Código morto pré-existente, sem impacto em execução; fora do escopo da v1.1.
 - O perfil do LinkedIn não foi confirmado por requisição (bloqueio de bot); os quatro repositórios do GitHub responderam 200.
+
+## 12. Ajuste 03 — auditoria final (TA-03)
+
+Data: 2026-11-18. Branch `feature/portfolio-v1.1-ajuste-02`, worktree `witty-meadow`, base `5327909`. Nenhum arquivo de produção foi alterado nesta tarefa.
+
+Ambiente: navegador Chromium embutido do OpenCode, servidor estático local com `Cache-Control: no-store` (o cache do navegador havia servido módulos antigos numa primeira rodada; todas as medições abaixo foram refeitas com os arquivos atuais). Larguras medidas por iframe same-origin de viewport fixo; temas aplicados por `data-theme`. Sem Firefox, dispositivo físico ou leitor de tela real.
+
+### 12.1 Testes
+
+| Comando | Resultado |
+|---|---|
+| `npm test` | 124 testes, 118 aprovados, 0 falhas, 6 skip |
+| `PUBLICAR=1 npm test` | 124 aprovados, 0 falhas, 0 skip |
+
+Nenhum teste foi alterado na TA-03.
+
+### 12.2 Critérios de aceite do Ajuste 03
+
+| Critério | Resultado | Evidência |
+|---|---|---|
+| CA-01 | PASS | HTML na ordem MarcAi, Seirei, Open Mind; ano 2026 e três stacks por linha; teste de markup compara byte a byte. |
+| CA-02 | PASS | `featured: true` em MarcAi; palco inicia em MarcAi com as quatro capacidades da seção 8.1. |
+| CA-03 | PASS | Quatro itens em cada `schematic.items`; fichas com papel, desafio e solução aprovados; testes de conteúdo e markup. |
+| CA-04 | PASS | MarcAi e Seirei exibem "Código privado" na linha e na ficha; zero âncoras nesses blocos; nenhum `[A preencher]` público. |
+| CA-05 | PASS | Open Mind mantém `https://github.com/nicolasponciano/open-mind` com rótulo "GitHub", `target="_blank"` e `rel="noopener noreferrer"`. Link respondeu 200. |
+| CA-06 | PASS | `marcai`, `seirei` e `open-mind` abrem a ficha correta; Voltar fecha em um passo e devolve o foco à linha. |
+| CA-07 | PASS | `#projeto/projeto-02` canonicaliza para `#projeto/open-mind` e abre a ficha; Voltar saiu da página, provando `replaceState` sem entrada extra. |
+| CA-08 | PASS | `projeto-01` e `projeto-03` removem o hash, não abrem ficha e exibem o aviso em `role="status"`; `?stack=` preservado. |
+| CA-09 | PASS | Filtros gerados: Todas, Next.js, TypeScript, PostgreSQL, Supabase, Node.js, OpenCode; contagem "3 de 3" sem filtro. |
+| CA-10 | PASS | Varredura por padrões e inspeção contextual dos arquivos alterados: nenhum caminho ou URL de repositório privado, credencial, string de conexão, endpoint, project ref ou nome de cliente. |
+| CA-11 | PASS | Diff sem `img`, ícone novo, sombra, gradiente ou linha extra; teste de markup fixa três linhas e três prévias. |
+| CA-12 | PASS | Moldura, filetes e selo preservados; altura comum às três prévias em 390, 768, 1024 e 1440 px. Em 360 px, Seirei cresce 6 px (518 contra 512). |
+| CA-13 | PASS | Mínimos calculados: 7,13:1 (tinta) e 5,53:1 (papel); aviso 10,88:1 / 8,49:1; ficha 5,59:1; esquema 9,45:1 / 7,67:1. |
+| CA-14 | PASS | `npm test` e `PUBLICAR=1 npm test` verdes, conforme 12.1. |
+| CA-15 | PASS | Sem JS: três linhas legíveis, "Código privado", link do Open Mind visível, palcos e prévias ocultos, zero rolagem horizontal. |
+| CA-16 | PASS | Nenhuma operação de visibilidade, push, merge ou deploy foi executada; o remoto do repositório é apenas o do portfólio. |
+
+### 12.3 Responsividade medida
+
+Alturas em px, tema tinta e papel com os mesmos valores. `palco` = `.hero-stage`; `lateral` = `.index-stage`; `prévias` = altura das três `.row-preview`.
+
+| Largura | Herói | Palco | Lateral | Pager (Y relativo ao herói) | Prévias | Rolagem horizontal |
+|---|---|---|---|---|---|---|
+| 360 | 1506 | 323×512 | oculta | 1312 | 467 / 427 / 389 | nenhuma |
+| 390 | 1506 | 336×512 | oculta | 1312 | 375 / 409 / 370 | nenhuma |
+| 768 | 1180 | 650×410 | oculta | 1029 | 243 / 261 / 223 | nenhuma |
+| 1024 | 866 | 393×486 | 359×448 | 620 | 0 (oculta) | nenhuma |
+| 1440 | 920 | 554×432 | 380×456 | 620 | 0 (oculta) | nenhuma |
+
+Extras: em 769x600, 800x600 e 900x650 a lateral de 560 px fica inteira visível depois de rolar até a lista; o rodapé do palco fica abaixo da dobra no topo, mas a lateral é decorativa (`aria-hidden`) e os dados repetidos estão na linha. Nenhum texto truncado nas larguras medidas; nenhuma fonte reduzida para caber. O rodapé do site aparece inteiro no fim da página.
+
+### 12.4 Acessibilidade
+
+- Árvore de acessibilidade: três `article` com nome "título + ano + tecnologias"; palco do herói é `group` "Prévia de projetos"; canvas, chrome, rodapé do palco e prévias de linha com `aria-hidden="true"`; aviso obsoleto aparece como `[status]` com o texto uma única vez.
+- Foco: ficha abre com foco em "Fechar ficha"; botão, backdrop e evento `cancel` fecham; foco volta à linha de origem. Palette devolve o foco ao elemento de origem.
+- Pager: clique e `Enter`/`Espaço` nativos do botão trocam a prévia; contador `02 / 03`; anúncio "Seirei, prévia 2 de 3" em `aria-live="polite"`. Foco não se move.
+- Alvos em 390 px: tema 44×44, pager 44×44, filtros 44 de altura, "Abrir" 44, copiar 44, e-mail 44, fechar 44, busca 52. Links textuais inline do cabeçalho e do rodapé são a exceção prevista para links em texto.
+- Movimento reduzido: `transition-duration` e `animation-duration` em 1e-05 s, botão "Ver montagem" oculto, pager funcional.
+- Sem JS: ver CA-15.
+- Limitação de método: o Tab físico do navegador hospedeiro não foi entregue à página (o harness intercepta o atalho); a ordem foi conferida pela sequência de elementos focáveis e os controles foram acionados por clique e evento sintético equivalente. Não houve leitor de tela real, então o anúncio do aviso e a ausência de duplicidade foram conferidos na árvore AX e no código (uma única região viva), não por áudio.
+
+### 12.5 Navegação e histórico
+
+- Hash canônico, alias e obsoletos validados em carga completa; `?stack=` preservado em todos.
+- `projeto-02` com `?stack=node-js` abre Open Mind com filtro "1 de 3".
+- Hash desconhecido remove só o hash, sem aviso.
+- Filtro grava `?stack=`, Voltar e Avançar restauram contagem e `aria-pressed`.
+- Palette: `Ctrl+K` sintético abre com foco no campo; busca "open" retorna 2 resultados; Enter abre Open Mind; Esc fecha e devolve o foco.
+- Console limpo em carga, filtros, fichas, palette, Voltar e Avançar.
+
+### 12.6 Segurança e privacidade
+
+- Inspeção contextual de `index.html`, `src/`, `tests/`, `README.md` e specs alteradas. Nenhuma URL de repositório privado, credencial, token real, string de conexão, endpoint interno, identificador de projeto ou nome de cliente.
+- O único link de repositório no conteúdo público é o do Open Mind, que é público.
+- Correção aplicada: a spec do Ajuste 02 citava um caminho absoluto local (`.../skills/skill-upgrader/SKILL.md`); o caminho foi removido, mantendo a referência ao arquivo.
+- Esta auditoria cobre o conteúdo do portfólio. Revisões de segurança de outros repositórios continuam sendo atividade privada separada e prioritária.
+
+### 12.7 Limitações e riscos residuais
+
+1. Mudança de hash no mesmo documento não passava por `canonicalize`: um link antigo aberto numa aba já carregada permanecia na URL e não abria ficha. O fluxo de link (carga completa) funcionava. **Resolvido na TA-04; registro mantido como histórico.**
+2. Em 360 px, a prévia do Seirei media 518 px e as outras 512 px; deslocamento de 6 px ao paginar nessa largura. **Resolvido na TA-04; registro mantido como histórico.**
+3. A árvore de acessibilidade foi inspecionada, mas não houve teste com leitor de tela real.
+4. O estado vazio de filtro não é alcançável pela URL: stack desconhecida é descartada na canonicalização e cai em "Todas". O estado permanece como defesa de interface.
+5. Abrir `?stack=` incompatível com `#projeto/<slug>` mantém a ficha aberta e a linha filtrada; comportamento herdado, fora dos critérios deste ajuste.
+6. O aviso depende de a região existir no HTML e de o CSS ocultá-la por padrão; ambos cobertos por teste.
+7. O limite de requisições do MarcAi é em memória; a frase pública é verdadeira, mas não descreve limite distribuído.
+8. Seirei não tem suíte automatizada e Open Mind foi validado apenas em Windows com OpenCode 2.2.5.
+
+### 12.8 Arquivos alterados nesta tarefa
+
+- `README.md`
+- `DESIGN.md` (rótulo "Prévia conceitual", alturas medidas e contrato dos links antigos)
+- `specs/portfolio-v1-1/requirements.md`
+- `specs/portfolio-v1-1/tasks.md`
+- `specs/portfolio-v1-1/verificacao.md`
+- `specs/portfolio-v1-1/ajuste-03-selecao.md`
+- `specs/portfolio-v1-1/ajuste-02-previews.md` (remoção de caminho local)
+
+Nenhum arquivo de `index.html`, `src/` ou `tests/` foi alterado na TA-03.
+
+## 13. Ajuste 03 — estabilização final (TA-04)
+
+Data: 2026-11-18. Branch `feature/portfolio-v1.1-ajuste-02`, worktree `witty-meadow`, base `5327909`. A TA-04 corrige os dois defeitos residuais da seção 12.7, sem alterar seleção, textos, stacks, fichas, tema, palette ou renderizador.
+
+### 13.1 Causa dos dois defeitos
+
+1. **Hash sem recarga:** o app escutava só `popstate`. Trocar `location.hash` na mesma página dispara `hashchange` (e não `popstate` no Chromium), então nenhum estado era aplicado: o alias não canonicalizava, o obsoleto não mostrava aviso e o hash desconhecido permanecia. Na carga completa o fluxo passava por `canonicalize`.
+2. **Hero instável em 360 px:** a faixa estreita usava `min-height: 512px`, mas o conteúdo do Seirei media 517,8 px. Como o palco cresce com o conteúdo, ele virava 517,8 px e empurrava o pager 5,8 px. A mesma insuficiência existia entre 401 e 641 px, onde a faixa de 410 px não cobria o conteúdo (até 481,5 px em 401).
+
+### 13.2 Correções aplicadas
+
+- `src/core.js`: nova função pura `resolveProjectLocation`, que resolve alias, projeto obsoleto, slug desconhecido, stack conhecida e URL canônica em uma única chamada. `canonicalize` passou a consumi-la.
+- `src/app.js`: `hashchange` e `popstate` chamam o mesmo `syncFromLocation`. A guarda `state.appliedUrl` ignora o segundo evento da mesma navegação, evitando tratamento duplicado e perda do aviso. Hashes que não começam com `#projeto/` (âncoras de seção) continuam intocados; a canonicalização usa `replaceState` e preserva `?stack=`.
+- `src/styles.css`: altura comum do hero em `520px` até 400 px (cobre as três prévias em 360) e nova faixa `486px` entre 401 e 650 px. Nenhuma tipografia foi reduzida, nenhum `line-clamp` foi criado e nenhum `overflow` interno foi adicionado.
+
+### 13.3 Testes
+
+| Comando | Resultado |
+|---|---|
+| `npm test` | 126 testes, 120 aprovados, 0 falhas, 6 skip |
+| `PUBLICAR=1 npm test` | 126 aprovados, 0 falhas, 0 skip |
+
+Testes novos:
+
+- `a navegação sem recarga canonicaliza alias, remove obsoleto e ignora desconhecido` (`tests/core.test.mjs`), com a sequência `projeto-02`, `projeto-01`, `projeto-03`, slug desconhecido e slug canônico.
+- `o mesmo documento preserva o filtro e não abre projeto substituto` (`tests/core.test.mjs`), cobrindo `?stack=`, aliases, obsoletos e stack fora da seleção.
+- Travas de CSS atualizadas para 520 px nas três faixas estreitas, 486 px na faixa de 401 a 650 px e sete regras de altura do hero (`tests/styles.test.mjs`).
+- Trava de markup para `hashchange` e `popstate` no mesmo sincronizador e para o uso de `resolveProjectLocation` (`tests/markup.test.mjs`).
+
+### 13.4 Navegação sem recarga — matriz medida
+
+Servidor local com `Cache-Control: no-store`. Cada linha começou em `location.hash = ...` na mesma aba já carregada.
+
+| Entrada | URL final | Ficha | Aviso | Histórico |
+|---|---|---|---|---|
+| `#projeto/projeto-02` | `#projeto/open-mind` | Open Mind, aberta | não | `replaceState`, sem entrada extra |
+| `#projeto/projeto-01` | sem hash | fechada | sim, `role="status"` | hash removido sem nova entrada |
+| `#projeto/projeto-03` | sem hash | fechada | sim, `role="status"` | hash removido sem nova entrada |
+| `#projeto/desconhecido` | sem hash | fechada | não | silencioso |
+| `#projeto/marcai` | `#projeto/marcai` | MarcAi, aberta | não | entrada criada pelo próprio hash |
+| `?stack=next-js` + `#projeto/projeto-02` | `?stack=next-js#projeto/open-mind` | Open Mind | não | filtro preservado, `2 de 3` |
+| `?stack=next-js` + `#projeto/projeto-01` | `?stack=next-js` | fechada | sim | filtro preservado |
+| Voltar após abrir pela linha | URL anterior | fecha | limpo | foco volta à seção |
+| Avançar | `#projeto/marcai` | reabre | limpo | `history.state` correto |
+| Alias após Avançar, depois Voltar | `#projeto/marcai` | reabre MarcAi | limpo | sem loop entre eventos |
+| Fechar ficha aberta por hash | sem hash | fechada | limpo | foco em `#projects-title` |
+
+Console: zero entradas em carga, aliases, obsoletos, hash desconhecido, abertura, fechamento e Voltar/Avançar.
+
+### 13.5 Altura do hero e pager
+
+Medição em tema tinta; papel repetiu os mesmos valores. `Y do pager` é o topo do `.stage-pager`; `spread` é a diferença entre a maior e a menor altura das três prévias.
+
+| Largura | MarcAi | Seirei | Open Mind | Spread | Y do pager |
+|---|---|---|---|---|---|
+| 360 | 520 | 520 | 520 | 0 | igual nas três |
+| 390 | 520 | 520 | 520 | 0 | igual nas três |
+| 400 | 520 | 520 | 520 | 0 | igual nas três |
+| 401 | 486 | 486 | 486 | 0 | igual nas três |
+| 480 | 486 | 486 | 486 | 0 | igual nas três |
+| 650 | 486 | 486 | 486 | 0 | igual nas três |
+| 651 | 410 | 410 | 410 | 0 | igual nas três |
+| 768 | 410 | 410 | 410 | 0 | igual nas três |
+| 1024 | 486 | 486 | 486 | 0 | igual nas três |
+| 1440 | 432 | 432 | 432 | 0 | igual nas três |
+
+Também medidas sem spread e sem rolagem horizontal: 320, 340, 370, 371, 377, 378, 481, 500, 520, 560, 600, 640, 641, 642, 700 e 769 px. Em 320 e 340 px a largura de layout continua limitada pelo overflow herdado (342 px); a correção não o alterou nem criou novo. `scrollHeight` do canvas igual à altura visível em todas as medições: sem rolagem interna e sem corte.
+
+### 13.6 Reavaliação dos critérios
+
+| Critério | Resultado | Evidência |
+|---|---|---|
+| CA-06 | PASS | Slugs canônicos abrem a ficha correta na carga e no hash alterado na mesma página; Voltar fecha e devolve o foco. |
+| CA-07 | PASS | `projeto-02` canonicaliza para `open-mind` nos dois fluxos, com `replaceState`; a contagem de histórico cresce só pela entrada criada pelo próprio hash. |
+| CA-08 | PASS | `projeto-01` e `projeto-03` removem o hash, não abrem substituto e exibem o aviso em `role="status"`; `?stack=` permanece. |
+| CA-12 | PASS | Moldura, filetes e selo inalterados; altura comum e pager no mesmo Y em 360, 390, 400, 401, 480, 650, 651, 768, 1024 e 1440 px. |
+
+Os demais critérios permanecem como na seção 12.2: nenhuma alteração de conteúdo, dados, links, filtros, contraste, sem-JS ou publicação foi feita.
+
+### 13.7 Regressões verificadas
+
+- 320 a 1440 px: nenhuma rolagem horizontal nova; 320 e 340 continuam com o overflow herdado, explicitamente fora do escopo.
+- Temas tinta e papel: mesmas alturas e mesmo Y do pager; nenhum token de cor foi alterado.
+- Pager circular: as três prévias continuam acessíveis por anterior/próximo, com contador e anúncio.
+- Fichas: abertura por linha, por URL canônica e por alias; fechamento por botão e por Voltar; foco preservado.
+- Filtros: `?stack=` preservado na canonicalização, `aria-pressed` e contagem corretos.
+- Console limpo; nenhuma dependência, markup, texto ou dado novo.
+- Sem JS: a altura só vale para `.hero-stage`, que continua oculto por `html.no-js`.
+
+### 13.8 Limitações de método
+
+- Sem leitor de tela real e sem Firefox ou dispositivo físico; a verificação usou Chromium embutido, árvore de acessibilidade e eventos equivalentes.
+- Hashes que não são de projeto (`#projetos`, `#sobre`) continuam sem passar pela canonicalização no mesmo documento, por decisão de escopo: são âncoras de seção e não links de ficha.
+
+### 13.9 Arquivos alterados nesta tarefa
+
+`src/core.js`, `src/app.js`, `src/styles.css`, `tests/core.test.mjs`, `tests/markup.test.mjs`, `tests/styles.test.mjs`, `README.md`, `DESIGN.md`, `specs/portfolio-v1-1/requirements.md`, `specs/portfolio-v1-1/tasks.md`, `specs/portfolio-v1-1/verificacao.md` e `specs/portfolio-v1-1/ajuste-03-selecao.md`.
+
+Nenhum commit, push, merge ou deploy. O estado do Git permanece com as alterações não commitadas da v1.1.
+
+## 14. Ajuste 04 - restauração de foco (correção de acessibilidade)
+
+Data: 2026-11-18. Branch `feature/portfolio-v1.1-ajuste-02`, worktree `witty-meadow`, base `5327909`. Correção restrita a `src/app.js`, `src/core.js` e `tests/core.test.mjs`; nenhum texto, dado, markup ou contrato público mudou.
+
+- **Problema anterior:** ao fechar a ficha, o foco voltava ao `article` da lista, não ao controle que abriu a ficha. Quem navega por teclado perdia a posição na lista e precisava percorrer o bloco de novo.
+- **Solução:** a abertura pela linha grava a origem em `state.focusOrigin` como `{ element, slug }`. No fechamento, `resolveCloseFocus({ originAvailable, rowVisible })` prioriza a origem e só depois recorre a `row` e `section`. `isAvailableOrigin` valida a origem com `isConnected`, `disabled` falso, `focus` de função e `getClientRects().length > 0`, além de exigir que o slug guardado coincida com o projeto fechado.
+- **Fallback:** deep link, palette e qualquer origem indisponível abrem com origem nula e mantêm o comportamento anterior (linha visível ou `#projects-title`). Linha oculta por filtro também cai no fallback.
+- **Verificação em navegador:** Chromium embutido, servidor local com `Cache-Control: no-store`. O foco voltou ao botão de origem em Enter/Escape, botão "Fechar", backdrop, deep link, palette, Voltar e Avançar, filtro que oculta a linha e canonicalização de `#projeto/projeto-02` para `#projeto/open-mind`.
+- **Teste automatizado:** `o foco volta ao controle de origem quando ele continua disponível` (`tests/core.test.mjs`), escrito antes da correção, falhou no código antigo e passou depois. O teste `o foco de retorno depende de a linha ainda estar visível` cobre o fallback.
+- **Suítes:** `npm test` 127 testes, 121 aprovados, 0 falhas, 6 skip; `PUBLICAR=1 npm test` 127 aprovados, 0 falhas, 0 skip.

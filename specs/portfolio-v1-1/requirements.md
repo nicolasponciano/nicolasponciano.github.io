@@ -4,13 +4,13 @@
 
 Evolução da v1.0 aprovada. A v1.1 fecha a maior lacuna de credibilidade do portfólio atual (prévias abstratas), corrige a hierarquia do herói, adiciona a trajetória profissional e acadêmica com dados reais e sincroniza a documentação com o produto que existe hoje. O escopo é P1, P2, P4, P5 e P6. P3 fica no backlog.
 
-Nada aqui autoriza copiar design, código ou conteúdo da referência em `C:\REA\portfolio-rea`, adicionar dependência, alterar a identidade visual ou inventar informação.
+Nada aqui autoriza copiar design, código ou conteúdo de qualquer referência analisada, adicionar dependência, alterar a identidade visual ou inventar informação.
 
 ## Relação com a v1.0
 
 - Os critérios CA-01 a CA-42 de `specs/portfolio-interativo/requirements.md` continuam válidos, exceto onde esta spec declara a substituição.
-- Substituições explícitas: CA-07 ganha composição situada e rótulo de esquema (mantém o fallback para o tipo `panel`); o teste de markup que exige `Full Stack` dentro do `<h1>` muda porque o nome passa a ser o `h1`.
-- Nenhum outro contrato da v1.0 muda: URL canônica, filtro, ficha, palette, tema, sem-JS e publicação continuam iguais.
+- Substituições explícitas: CA-07 ganha composição situada e rótulo de esquema (mantém o fallback para o tipo `panel`); o teste de markup que exige `Full Stack` dentro do `<h1>` muda porque o nome passa a ser o `h1`; CA-26 muda no nome acessível e no estado do botão de tema, conforme RF-18.
+- Nenhum outro contrato da v1.0 muda: URL canônica, filtro, ficha, palette, tema visual, sem-JS e publicação continuam iguais.
 
 ## Escopo aprovado
 
@@ -32,16 +32,16 @@ Conteúdo permitido, por projeto:
 
 | Projeto | Elementos comprovados que podem aparecer |
 |---|---|
-| ClienteAPI | cadastro, consulta, pesquisa, atualização e exclusão de clientes; validação de CEP por serviço externo; EF Core com SQL Server; Swagger; middleware de exceções. |
-| Open Mind | as seis ferramentas `open_mind_status`, `open_mind_search`, `open_mind_read`, `open_mind_create`, `open_mind_update`, `open_mind_project_context`; contexto de projeto por sessão; escrita desabilitada por padrão; atualização condicionada por hash. |
-| Skill Upgrader | descoberta e classificação de skills; comparação de versão e conteúdo; estados de auditoria; exigência de evidência, backup e rollback antes de atualizar. |
+| MarcAi | agenda com disponibilidade por profissional, serviço e duração; isolamento por estabelecimento; papéis de dono e equipe aplicados no servidor; agendamento idempotente com verificação de conflito e auditoria; página pública de agendamento. |
+| Seirei | modo foco com concluir, pular e nova rodada; entrada por texto ou voz com separação automática; ordenação e duração estimadas por IA com validação e fallback; dependência entre tarefas; sincronização com RLS por usuário. |
+| Open Mind | as seis ferramentas `open_mind_status`, `open_mind_search`, `open_mind_read`, `open_mind_create`, `open_mind_update`, `open_mind_project_context`; contexto de projeto por sessão; leitura confinada à raiz do Vault; escrita desabilitada por padrão e condicionada ao hash da versão lida. |
 
-As seis ferramentas do Open Mind são agrupadas em cinco itens: `open_mind_status`, `open_mind_search`, `open_mind_read`, `open_mind_create` e `open_mind_update`, um por item, com o nome exato visível. A sexta, `open_mind_project_context`, aparece no rodapé do esquema junto de "escrita desabilitada por padrão", porque descreve o contexto da sessão e não uma operação isolada. Nenhum dos seis nomes é omitido nem fundido em texto genérico.
+Atualização de 2026-11-18 (Ajuste 03): a seleção passou a ser MarcAi, Seirei e Open Mind, nesta ordem, com MarcAi em destaque. ClienteAPI e Skill Upgrader, que ocupavam a tabela anterior desta spec, saíram do portfólio. Cada esquema passou a ter quatro itens, sem o agrupamento de cinco ferramentas e sem rodapé separado: a sexta ferramenta do Open Mind é citada no quarto item, junto das outras cinco.
 
 Critérios de aceite:
-- CA-43: os três esquemas válidos (ClienteAPI, Open Mind e Skill Upgrader) exibem pelo menos quatro elementos nomeados e um rodapé de contexto cada; nenhum esquema usa texto genérico como "bloco", "painel" ou "fluxo" como conteúdo. O mínimo de quatro não se aplica ao esquema neutro de fallback de CA-47.
+- CA-43: os três esquemas válidos (MarcAi, Seirei e Open Mind) exibem exatamente quatro elementos nomeados cada; nenhum esquema usa texto genérico como "bloco", "painel" ou "fluxo" como conteúdo. O mínimo de quatro não se aplica ao esquema neutro de fallback de CA-47.
 - CA-44: nenhum elemento do esquema afirma função, integração, métrica ou resultado ausente da tabela de conteúdo permitido; nome de ferramenta aparece exatamente como no repositório.
-- CA-45: todo palco e toda prévia de linha exibem o rótulo visível "Esquemático" ao lado do tipo da prévia, e o palco mantém o tipo descritivo ("API REST", "Sessão de ferramentas", "Auditoria de skills").
+- CA-45: todo palco e toda prévia de linha exibem o rótulo visível "Prévia conceitual" ao lado do tipo da prévia, e o palco mantém o tipo descritivo ("SaaS de agendamentos", "Produto web de produtividade", "Ferramenta de desenvolvimento").
 - CA-46: CA-07 permanece: a prévia é composta em HTML/CSS a partir dos dados do projeto, sem imagem, vídeo, `canvas`, SVG novo ou requisição; tipo desconhecido cai em `panel`.
 - CA-47: slug sem esquema ou esquema inválido (sem itens, item sem texto) não quebra a página: a prévia cai no esquema neutro do tipo e nenhum erro vai ao console.
 - CA-48: a troca de prévia continua em 160 ms, não desloca linhas nem palco, e o conteúdo do esquema fica dentro de um contêiner `aria-hidden="true"`.
@@ -115,6 +115,36 @@ Critérios de aceite:
 - CA-72: contraste de texto e controles novos permanece no mínimo 4,5:1 nos temas tinta e papel.
 - CA-73: nenhuma dependência, etapa de build, fonte nova, imagem nova ou requisição de rede é adicionada.
 
+### RF-18 Botão de tema como ação (Ajuste 01)
+
+Correção do contrato de acessibilidade herdado da v1.0. O botão exibia o rótulo fixo "Tema papel" e `aria-pressed`, então o texto não informava o que aconteceria ao clicar e o controle misturava rótulo variável com estado de toggle. Esta regra substitui CA-26 apenas no nome acessível e no estado do botão; a persistência, a preferência inicial e os temas visuais continuam valendo.
+
+Critérios de aceite:
+- CA-74: com o tema tinta ativo, o botão exibe "Ativar tema papel"; com o tema papel ativo, exibe "Ativar tema tinta". O texto muda na mesma interação que troca `data-theme`, sem recarregar a página e sem indicar o estado atual como rótulo.
+- CA-75: o nome acessível corresponde ao texto visível. O botão não tem `aria-label` paralelo, `aria-pressed` nem `role="switch"`; é um botão de ação.
+- CA-76: abaixo de 720 px o rótulo permanece no nome acessível por recorte visual, nunca por `display: none`.
+- CA-77: o HTML inicial mostra a ação correta para o tema tinta (fallback), e `initTheme` sincroniza o rótulo com o armazenamento e o sistema antes da primeira interação, sem rótulo errado visível.
+- CA-78: `localStorage` sob `portfolio-theme`, `prefers-color-scheme` na primeira visita, temas, tokens, cores e movimentos não mudam.
+- CA-79: o botão continua nativo (`type="button"`), operável por Tab, Enter e Espaço; cada acionamento troca o tema, atualiza o rótulo e `meta[theme-color]` e grava a preferência.
+
+### RF-19 Seleção de projetos (Ajuste 03)
+
+Aprovada em 2026-11-18. Substitui integralmente a lista de projetos de RF-12; os critérios CA-01 a CA-16 de `specs/portfolio-v1-1/ajuste-03-selecao.md` são a autoridade desta seleção.
+
+| Posição | Projeto | Categoria | Código | Stack na linha |
+|---|---|---|---|---|
+| 1 destaque | MarcAi | SaaS de agendamentos | privado | Next.js, TypeScript, PostgreSQL |
+| 2 | Seirei | Produto web de produtividade | privado | Next.js, TypeScript, Supabase |
+| 3 | Open Mind | Ferramenta de desenvolvimento | público | TypeScript, Node.js, OpenCode |
+
+Regras:
+- Todos os projetos exibem ano 2026 e exatamente três tecnologias na linha.
+- MarcAi é o `featured`: é a prévia inicial do herói.
+- MarcAi e Seirei não têm âncora de repositório e exibem "Código privado", derivado de `codeVisibility` em `projectDetails`. Open Mind mantém o link público com o rótulo "GitHub".
+- Os slugs canônicos são `marcai`, `seirei` e `open-mind`. `projeto-02` canonicaliza para `open-mind` com `replaceState`; `projeto-01` e `projeto-03` removem o hash e exibem um aviso em `role="status"`. Hash desconhecido continua removido em silêncio. A mesma regra vale na carga completa e quando o hash muda na página, sem recarga, com um único caminho para `hashchange` e `popstate`.
+- Os filtros são gerados a partir das stacks das três linhas. Stack fora da seleção é descartada na canonicalização da URL, sem estado vazio artificial.
+- Nenhum caminho, URL de repositório privado, endpoint, project ref, credencial, nome de cliente ou preço entra em arquivo público.
+
 ## Backlog
 
 - P3: bloco "Decisões técnicas" dentro da ficha do projeto, com escolhas, alternativas e trade-offs. Fica fora da v1.1; exige dados reais por projeto e novo espaço na folha.
@@ -150,7 +180,8 @@ Nenhuma bloqueia a implementação. Qualquer mudança de escopo posterior atuali
 - `index.html`: `h1` vira o nome, entra kicker e linha de fatos; palco do herói perde `aria-hidden` no contêiner e ganha pager; entra a seção Trajetória; o palco do índice mantém estrutura.
 - `src/app.js`: `renderCanvas` passa a renderizar esquema a partir de dados; entra o controlador do pager; a prévia de linha usa o mesmo renderizador.
 - `src/data/portfolio.js`: cada projeto ganha `schematic` com rótulo, nota, itens e rodapé; `preview` continua string de layout.
-- `src/core.js`: entram funções puras de índice do pager e leitura/validação de esquema.
+- `src/core.js`: entram funções puras de índice do pager, leitura/validação de esquema e rótulo de ação do tema.
+- `index.html`, `src/app.js` e `src/styles.css`: o botão de tema passa a exibir a próxima ação e perde `aria-pressed` e `aria-label`, conforme RF-18; no mobile o rótulo é recortado visualmente para não perder o nome acessível.
 - `src/styles.css`: novos blocos de pager, esquema, kicker, fatos e Trajetória; `.preview-block` permanece como fallback.
 - `tests/`: `markup.test.mjs` muda a asserção do `h1` e ganha pager, palco e Trajetória; `styles.test.mjs` ganha pager, esquema e responsividade; `content.test.mjs` valida `schematic`; `core.test.mjs` cobre o pager.
 - `README.md`, `PRODUCT.md`, `DESIGN.md`, `.impeccable/surfaces/index-html.md`: sincronizados na P6.

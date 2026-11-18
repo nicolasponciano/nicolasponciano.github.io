@@ -1,6 +1,6 @@
 ---
 name: Portfólio Full Stack
-description: Portfólio de página única com herói dominante, prévias esquemáticas, índice de trabalho, ficha de projeto, trajetória e busca por comando.
+description: Portfólio de página única com herói dominante, prévias conceituais, índice de trabalho, ficha de projeto, trajetória e busca por comando.
 colors:
   ink: "#0b1d27"
   ink-raised: "#102a35"
@@ -108,7 +108,7 @@ Ordem de leitura do herói:
 6. `.hero-search`: campo que abre a palette.
 7. `.hero-foot`: "Interfaces, serviços e dados", link "Desça para explorar" e o botão "Ver montagem".
 
-Índice de trabalho em duas colunas: lista e palco fixo. O palco fica com 40% da largura até 1024 px e some abaixo de 768 px, quando a prévia passa para dentro da linha. A linha de projeto usa quatro colunas (índice, título e resumo, metadados, ações) somente a partir de 1440 px; abaixo disso os metadados empilham sob o título, mantendo a coluna de texto legível entre 1200 e 1439 px. Abaixo de 720 px as ações vão para a linha seguinte.
+Índice de trabalho em duas colunas: lista e palco fixo. O palco fica com 40% da largura até 1024 px e some em 768 px ou menos, quando a prévia passa para dentro da linha. A linha de projeto usa quatro colunas (índice, título e resumo, metadados, ações) somente a partir de 1440 px; abaixo disso os metadados empilham sob o título, mantendo a coluna de texto legível entre 1200 e 1439 px. Abaixo de 720 px as ações vão para a linha seguinte.
 
 A Trajetória usa duas colunas iguais com gap de 44 px a partir de 1024 px e uma coluna abaixo disso; em 768 px ou menos o período aparece acima do cargo.
 
@@ -126,15 +126,15 @@ Cantos retos em todos os elementos: botões, campos, linhas, folhas e controles.
 
 - **Botão primário**: bloco turquesa, texto em tinta, sem raio, escala 0,98 no clique.
 - **Herói**: kicker com o papel, `h1` com o nome, resumo, linha de fatos, duas ações e busca que abre a palette (`Ctrl+K`/`⌘+K`).
-- **Palco de prévia**: moldura `aria-hidden` no miolo, barra de título, tipo descritivo e nota "Esquemático", canvas `aria-hidden` e rodapé com a stack. O conteúdo é composto em HTML/CSS a partir do `schematic` do projeto, com `ol.schematic-list` e `p.schematic-foot`; tipo desconhecido ou esquema inválido cai no bloco neutro `panel`. No índice é fixo em desktop e entra dentro da linha em toque.
-- **Palco estável do herói**: com esquema, `min-height: 380px` e o esquema centralizado no canvas. A altura não muda entre projetos e não há animação de altura, então o pager permanece no mesmo Y.
+- **Palco de prévia**: moldura `aria-hidden` no miolo, barra de título, tipo descritivo e nota "Prévia conceitual", canvas `aria-hidden` e rodapé com a stack. O conteúdo é composto em HTML/CSS a partir do `schematic` do projeto, com `ol.schematic-list`, `purpose` e no máximo quatro itens; tipo desconhecido ou esquema inválido cai no bloco neutro `panel`. No índice é fixo em desktop e entra dentro da linha em toque.
+- **Palco estável do herói**: a altura útil é comum aos três projetos em cada faixa de largura e acompanha o conteúdo mais alto, sem corte e sem rolagem interna. Referências medidas: cerca de 520 px até 400 px, 486 px entre 401 e 650 px, 410 px entre 651 e 768 px, 486 px entre 769 e 1439 px e 432 px a partir de 1440 px. A altura não anima, então o pager permanece no mesmo Y; se um projeto crescer, a caixa cresce junto.
 - **Pager manual**: dois botões de 44 × 44 px, "Prévia anterior" e "Próxima prévia", contador visível `01 / 03` em `aria-hidden` e região `aria-live="polite"` que anuncia "`<título>`, prévia N de M" após a troca. Ordem circular, sem timer ou autoplay. Com dois ou mais projetos o pager aparece; com um projeto o esquema aparece sem pager nem contador; com zero o palco fica vazio.
 - **Linha de projeto**: índice, título, resumo, ano, stack, botão "Abrir" e links externos reais; hover e foco trocam a prévia do índice em 160 ms. Abaixo de 720 px o cabeçalho da prévia de linha quebra e mostra a stack inteira.
 - **Filtro**: tags com `aria-pressed`, contagem `N de M` em `aria-live` e estado vazio com "Limpar filtro"; o filtro vive em `?stack=`.
 - **Ficha**: folha clara em `<dialog>`, título, resumo, papel, desafio, solução, stack, ano e links clonados da linha; aberta por "Abrir" ou `#projeto/<slug>`.
 - **Palette**: `<dialog>` estreito com `role="listbox"`, busca sem caixa e sem acento, setas, Home, End, Enter e Esc; bloqueada enquanto a ficha está aberta.
 - **Trajetória**: `#trajetoria` entre Projetos e Sobre, com dois grupos (`h3` Experiência e Formação) e listas ordenadas. Cada item mostra período, cargo ou curso e organização; a pós-graduação leva a nota "em andamento". Não entra na navegação do cabeçalho e entra na palette por `data-section-label`.
-- **Botão de tema**: nome acessível fixo "Tema papel", `aria-pressed` fiel ao tema e persistência local.
+- **Botão de tema**: rótulo de ação, "Ativar tema papel" no tema tinta e "Ativar tema tinta" no papel, sem `aria-pressed`; o nome acessível é o próprio texto e a persistência continua local.
 - **Contato**: `mailto:` visível e botão que copia o endereço com confirmação em `aria-live`.
 - **"Ver montagem"**: botão único dentro de `.hero-foot-actions`, oculto sem JS e com movimento reduzido; a cena usa 6 cursores no desktop e 4 em telas compactas, nunca oculta conteúdo e para na primeira interação.
 
@@ -157,17 +157,19 @@ Tokens únicos em `:root`: `--dur-1` 120 ms (hover, press, cor), `--dur-2` 160 m
 
 | Largura | Herói | Palco | Trajetória |
 |---|---|---|---|
-| 1440 px | duas colunas, nome até 136 px | 380 px de altura, pager sob o esquema | duas colunas |
-| 1024 px | duas colunas, nome ~97 px, sem truncar | palco de 380 px, pager de 44 px | duas colunas |
-| 768 px | uma coluna | palco abaixo do texto, 380 px de altura | uma coluna |
-| 390 px | uma coluna, nome 60 px em uma linha | todos os itens, fonte 12 px, pager completo | uma coluna |
+| 1440 px | duas colunas, nome até 136 px | 432 px de altura, pager sob o esquema | duas colunas |
+| 1024 px | duas colunas, nome ~97 px, sem truncar | palco de 486 px, pager de 44 px | duas colunas |
+| 768 px | uma coluna | palco abaixo do texto, 410 px de altura | uma coluna |
+| 390 px | uma coluna, nome 60 px em uma linha | palco de 520 px, todos os itens, pager completo | uma coluna |
 
-Todos os itens do esquema continuam no DOM em todas as larguras. O rótulo do esquema tem coluna de 78 px para caber "atualização". Se o espaço apertar, reduz tipografia e padding, nunca remove conteúdo nem cria rolagem interna. A barra de filtros rola na horizontal dentro do próprio contêiner em 390 px, comportamento herdado da v1.0.
+Todos os itens do esquema continuam no DOM em todas as larguras. O índice do item tem coluna de 26 px. Se o espaço apertar, reduz tipografia e padding, nunca remove conteúdo nem cria rolagem interna. A barra de filtros rola na horizontal dentro do próprio contêiner em 390 px, comportamento herdado da v1.0. A altura comum do palco é 520 px até 400 px, 486 px entre 401 e 650 px, 410 px entre 651 e 768 px, 486 px entre 769 e 1439 px e 432 px em 1440 px. O palco lateral do índice segue a mesma regra, com altura própria por faixa, e dá lugar à prévia dentro da linha a partir de 768 px.
 
 ## Contracts de URL e navegação
 
 - `?stack=<slug>` filtra o índice; `?stack=` vazio remove o filtro. Voltar e Avançar restauram o estado.
 - `#projeto/<slug>` abre a ficha correspondente; fechar limpa o hash e devolve o foco.
+- `#projeto/projeto-02` canonicaliza para `#projeto/open-mind` com `replaceState`, sem nova entrada no histórico. `projeto-01` e `projeto-03` removem o hash e exibem um aviso em `role="status"`; hash desconhecido é removido em silêncio.
+- A canonicalização vale também quando o hash muda na mesma página, sem recarga. `hashchange` e `popstate` passam por um único sincronizador, que ignora eventos duplicados da mesma navegação e preserva `?stack=`, foco e histórico.
 - O pager do herói não escreve na URL, não cria histórico e não controla o palco do índice.
 - A palette não altera a URL; ao ativar um resultado, rola até a seção ou abre o projeto.
 - O tema persiste em `localStorage`; a URL não carrega tema.

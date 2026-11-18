@@ -180,6 +180,20 @@ export function normalizeSlug(value) {
     .replace(/^-+|-+$/g, "");
 }
 
+const LEGACY_PROJECT_ALIASES = { "projeto-02": "open-mind" };
+const OBSOLETE_PROJECTS = new Set(["projeto-01", "projeto-03"]);
+
+export function resolveLegacyProject(value) {
+  const slug = normalizeSlug(value);
+  if (!slug || !Object.hasOwn(LEGACY_PROJECT_ALIASES, slug)) return null;
+  return LEGACY_PROJECT_ALIASES[slug];
+}
+
+export function isObsoleteProject(value) {
+  const slug = normalizeSlug(value);
+  return slug ? OBSOLETE_PROJECTS.has(slug) : false;
+}
+
 export function parseUrlState({ search = "", hash = "" } = {}) {
   const params = new URLSearchParams(typeof search === "string" ? search : "");
   const stack = normalizeSlug(params.get("stack") || "") || null;
@@ -198,6 +212,37 @@ export function buildUrl({ pathname = "/", stack = null, project = null } = {}) 
   const stackSlug = normalizeSlug(stack);
   const projectSlug = normalizeSlug(project);
   return `${path}${stackSlug ? `?stack=${stackSlug}` : ""}${projectSlug ? `#projeto/${projectSlug}` : ""}`;
+}
+
+function toSlugList(value) {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => normalizeSlug(item)).filter(Boolean);
+}
+
+export function resolveProjectLocation({
+  pathname = "/",
+  search = "",
+  hash = "",
+  projectSlugs = [],
+  stackSlugs = [],
+} = {}) {
+  const urlState = parseUrlState({ search, hash });
+  const knownProjects = toSlugList(projectSlugs);
+  const knownStacks = toSlugList(stackSlugs);
+  const stack = urlState.stack && knownStacks.includes(urlState.stack) ? urlState.stack : null;
+  const legacyProject = resolveLegacyProject(urlState.project);
+  const obsoleteProject = isObsoleteProject(urlState.project);
+  const candidate = legacyProject ?? urlState.project;
+  const project = candidate && knownProjects.includes(candidate) ? candidate : null;
+  const hasProjectHash = typeof hash === "string" && hash !== "";
+
+  return {
+    stack,
+    project,
+    canonical: buildUrl({ pathname, stack, project }),
+    projectRemoved: hasProjectHash && !project,
+    projectObsolete: obsoleteProject && !project,
+  };
 }
 
 export function filterProjects(items, stackSlug) {
@@ -263,7 +308,12 @@ export function nextTheme(theme) {
   return theme === "paper" ? "ink" : "paper";
 }
 
-export function resolveCloseFocus({ rowVisible = false } = {}) {
+export function themeToggleLabel(current) {
+  return current === "paper" ? "Ativar tema tinta" : "Ativar tema papel";
+}
+
+export function resolveCloseFocus({ rowVisible = false, originAvailable = false } = {}) {
+  if (originAvailable === true) return { target: "origin" };
   return { target: rowVisible === true ? "row" : "section" };
 }
 
@@ -282,11 +332,11 @@ export function moveSelection(index, delta, length) {
   return ((start + step) % size + size) % size;
 }
 
-export const SCHEMATIC_MAX_ITEMS = 5;
+export const SCHEMATIC_MAX_ITEMS = 4;
 
 const PREVIEW_TYPES = ["panel", "terminal", "flow"];
 const NEUTRAL_SCHEMATIC_LABELS = { panel: "Painel", terminal: "Terminal", flow: "Fluxo" };
-const SCHEMATIC_NOTE = "Esquemático";
+const SCHEMATIC_NOTE = "Prévia conceitual";
 
 function cleanSchematicText(value) {
   if (typeof value !== "string") return "";
@@ -297,20 +347,17 @@ export function normalizeSchematic(value) {
   if (!value || typeof value !== "object") return null;
 
   const items = (Array.isArray(value.items) ? value.items : [])
-    .slice(0, SCHEMATIC_MAX_ITEMS)
-    .map((item) => ({
-      tag: cleanSchematicText(item?.tag),
-      text: cleanSchematicText(item?.text),
-    }))
-    .filter((item) => item.text);
+    .map(cleanSchematicText)
+    .filter((item) => item.length > 0)
+    .slice(0, SCHEMATIC_MAX_ITEMS);
 
   if (items.length === 0) return null;
 
   return {
     label: cleanSchematicText(value.label),
     note: cleanSchematicText(value.note) || SCHEMATIC_NOTE,
+    purpose: cleanSchematicText(value.purpose),
     items,
-    foot: cleanSchematicText(value.foot),
   };
 }
 
@@ -322,8 +369,8 @@ export function getSchematic(details, fallbackType = "panel") {
   return {
     label: NEUTRAL_SCHEMATIC_LABELS[type],
     note: SCHEMATIC_NOTE,
+    purpose: "",
     items: [],
-    foot: "",
   };
 }
 

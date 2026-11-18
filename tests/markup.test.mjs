@@ -95,7 +95,7 @@ test("o índice estrutura linhas com título, ano, stack, abrir e palco", () => 
 
   assert.equal(rows.length, 3, "o índice precisa manter as três linhas");
   rows.forEach((row) => {
-    assert.match(row, /<h3 id="projeto-0\d-title"/);
+    assert.match(row, /<h3 id="[a-z0-9-]+-title"/);
     assert.match(row, /data-project-year/);
     assert.match(row, /class="stack-tag"/);
     assert.match(row, /class="project-open"[^>]*hidden/, "abrir ficha só aparece quando a ficha existir");
@@ -107,6 +107,22 @@ test("o índice estrutura linhas com título, ano, stack, abrir e palco", () => 
   assert.match(html, /class="hero-search" role="search"[^>]*aria-label="Busca do portfólio"/, "a busca do hero fica ativa com a palette");
   assert.doesNotMatch(html, /class="hero-search"[^>]*\shidden\b/, "a busca não pode continuar oculta");
   assert.doesNotMatch(html, /data-build|data-reveal/, "não restam ganchos da montagem antiga");
+});
+
+test("o selo das prévias vem do contrato de dados, não de um texto fixo no HTML", () => {
+  const html = readFileSync(pagePath, "utf8");
+  const app = readFileSync(fileURLToPath(new URL("../src/app.js", import.meta.url)), "utf8");
+  const data = readFileSync(dataPath, "utf8");
+
+  assert.doesNotMatch(html, /Esquemático/, "o HTML não pode manter o rótulo antigo");
+  assert.match(html, /<span class="stage-note"><\/span>/, "o chrome nasce vazio e recebe o selo do dado");
+  assert.equal(
+    (data.match(/note: "Prévia conceitual"/g) ?? []).length,
+    3,
+    "cada projeto declara o mesmo selo no contrato",
+  );
+  assert.match(app, /note\.textContent = schematic\.note/, "o palco usa o selo normalizado");
+  assert.match(app, /\[data-preview-note\]/, "a prévia compacta usa o mesmo selo");
 });
 
 test("o controle da montagem fica no rodapé do hero, antes do fim da seção", () => {
@@ -243,12 +259,20 @@ test("a palette é um dialog fechado com combobox, listbox e contagem anunciada"
   assert.doesNotMatch(palette, /\bopen\b/, "a palette não pode nascer aberta");
 });
 
-test("o botão de tema usa nome acessível fixo e estado em aria-pressed", () => {
+test("o botão de tema anuncia a próxima ação e não usa estado de toggle", () => {
   const html = readFileSync(pagePath, "utf8");
-  assert.match(html, /<button[^>]*id="theme-toggle"[^>]*aria-pressed="false"/);
-  assert.match(html, /aria-label="Tema papel"/, "o nome acessível não pode descrever a próxima ação");
-  assert.doesNotMatch(html, /Ativar tema/, "o nome acessível precisa ser o mesmo em qualquer tema");
-  assert.doesNotMatch(html, /data-theme-label/, "o rótulo não pode mudar ao alternar");
+  const start = html.indexOf('id="theme-toggle"');
+  assert.ok(start !== -1, "o botão de tema precisa existir");
+  const open = html.lastIndexOf("<button", start);
+  const close = html.indexOf("</button>", start) + "</button>".length;
+  const button = html.slice(open, close);
+
+  assert.match(button, /<button[^>]*type="button"/, "o botão precisa ser nativo para funcionar por teclado");
+  assert.match(button, /data-theme-label[^>]*>Ativar tema papel</, "o rótulo inicial descreve a ação no tema tinta");
+  assert.doesNotMatch(button, /aria-pressed/, "um botão de ação não combina rótulo variável com estado de toggle");
+  assert.doesNotMatch(button, /aria-label/, "o nome acessível vem do texto visível, sem rótulo paralelo");
+  assert.doesNotMatch(button, /role=/, "o botão nativo não precisa de role artificial");
+
   assert.match(html, /localStorage\.getItem\("portfolio-theme"\)/);
   assert.doesNotMatch(html, /localStorage\.setItem/, "o script de boot não pode gravar preferência");
 });
@@ -264,6 +288,214 @@ test("o contato tem mailto visível, botão de copiar e região de anúncio", ()
   assert.match(contact, /class="contact-email"[^>]*>[\s\S]*?@/, "o endereço precisa ficar visível");
   assert.match(contact, /<button[^>]*id="copy-email"[^>]*>Copiar e-mail</);
   assert.match(contact, /id="copy-status"[^>]*role="status"[^>]*aria-live="polite"/);
+});
+
+test("o aviso de projeto removido nasce oculto, vazio e fora da ordem de foco", () => {
+  const html = readFileSync(pagePath, "utf8");
+  const start = html.indexOf('id="project-notice"');
+  assert.ok(start !== -1, "a seção Projetos precisa da região de aviso");
+
+  const tagStart = html.lastIndexOf("<p", start);
+  const tagEnd = html.indexOf(">", start) + 1;
+  const tag = html.slice(tagStart, tagEnd);
+  const body = html.slice(tagEnd, html.indexOf("</p>", start));
+
+  assert.match(tag, /role="status"/);
+  assert.match(tag, /aria-live="polite"/);
+  assert.match(tag, /aria-atomic="true"/);
+  assert.match(tag, /\bhidden\b/, "o estado oculto vem do HTML, não só do CSS");
+  assert.doesNotMatch(tag, /tabindex|autofocus/, "o aviso não recebe foco");
+  assert.equal(body.trim(), "", "o aviso nasce vazio e só o JS escreve");
+
+  const section = html.slice(html.indexOf('id="projetos"'), html.indexOf("</section>", html.indexOf('id="projetos"')));
+  assert.ok(section.includes('id="project-notice"'), "o aviso vive dentro da seção Projetos");
+  assert.equal((section.match(/data-project-slug=/g) ?? []).length, 3, "a lista principal continua com três linhas");
+});
+
+test("o aviso é alimentado pela canonicalização, sem empilhar histórico", () => {
+  const app = readFileSync(fileURLToPath(new URL("../src/app.js", import.meta.url)), "utf8");
+  const start = app.indexOf("function canonicalize");
+  const end = app.indexOf("function buildFilter", start);
+  assert.ok(start !== -1 && end > start, "canonicalize precisa existir");
+  const canonicalize = app.slice(start, end);
+
+  assert.match(canonicalize, /resolveProjectLocation\(/, "a canonicalização reusa a regra pura");
+  assert.match(canonicalize, /history\.replaceState/, "alias antigo usa replaceState");
+  assert.doesNotMatch(canonicalize, /history\.pushState/, "canonicalização não cria entrada no histórico");
+  assert.match(app, /addEventListener\("hashchange", syncFromLocation\)/, "hash alterado no mesmo documento passa pela canonicalização");
+  assert.match(app, /addEventListener\("popstate", syncFromLocation\)/, "Voltar e Avançar usam o mesmo caminho");
+  assert.match(app, /function syncFromLocation\(\)/, "a sincronização não é duplicada entre os dois eventos");
+  assert.match(app, /projectNotice\.region\.textContent = message/, "o aviso é escrito com textContent");
+  assert.match(app, /projectNotice\.region\.hidden = !message/, "o aviso volta a ficar oculto ao limpar");
+});
+
+const APPROVED_ROWS = [
+  {
+    slug: "marcai",
+    index: "01",
+    title: "MarcAi",
+    summary:
+      "Plataforma de agendamentos multi-tenant com agenda por profissional, papéis de acesso e página pública de agendamento.",
+    year: "2026",
+    stacks: ["Next.js", "TypeScript", "PostgreSQL"],
+    link: null,
+    privateCode: true,
+  },
+  {
+    slug: "seirei",
+    index: "02",
+    title: "Seirei",
+    summary:
+      "Aplicativo de foco que mostra uma tarefa por vez, ordena o dia com IA e sincroniza entre dispositivos.",
+    year: "2026",
+    stacks: ["Next.js", "TypeScript", "Supabase"],
+    link: null,
+    privateCode: true,
+  },
+  {
+    slug: "open-mind",
+    index: "03",
+    title: "Open Mind",
+    summary:
+      "Plugin para OpenCode que transforma um Vault do Obsidian em contexto de projeto, com leitura confinada e escrita desabilitada por padrão.",
+    year: "2026",
+    stacks: ["TypeScript", "Node.js", "OpenCode"],
+    link: ["https://github.com/nicolasponciano/open-mind", "GitHub"],
+    privateCode: false,
+  },
+];
+
+function readRows(html) {
+  return [...html.matchAll(/<article class="project-entry"[\s\S]*?<\/article>/g)].map((match) => {
+    const row = match[0];
+    const anchor = row.match(/<a href="([^"]+)"[^>]*>([^<]+)</);
+    const links = row.match(/class="project-links[^"]*"[^>]*>([\s\S]*?)<\/span>\s*<\/div>/);
+    return {
+      slug: row.match(/data-project-slug="([^"]+)"/)[1],
+      index: row.match(/class="project-index"[^>]*>([^<]+)</)[1].trim(),
+      title: row.match(/<h3[^>]*>([^<]+)<\/h3>/)[1].trim(),
+      summary: row.match(/<\/h3>\s*<p>([\s\S]*?)<\/p>/)[1].trim(),
+      year: row.match(/data-project-year>([^<]+)</)[1].trim(),
+      stacks: [...row.matchAll(/class="stack-tag">([^<]+)</g)].map((m) => m[1].trim()),
+      link: anchor ? anchor.slice(1) : null,
+      privateCode: /Código privado/.test(links?.[1] ?? ""),
+      open: row.match(/class="project-open"[^>]*>([^<]+)</)[1].trim(),
+      labelledBy: row.match(/<article[^>]*aria-labelledby="([^"]+)"/)[1],
+    };
+  });
+}
+
+test("a lista principal de Projetos mantém ordem, textos e atributos aprovados", () => {
+  const html = readFileSync(pagePath, "utf8");
+  const rows = readRows(html);
+
+  assert.equal(rows.length, APPROVED_ROWS.length, "a lista mantém exatamente três linhas");
+  rows.forEach((row, position) => {
+    const approved = APPROVED_ROWS[position];
+    assert.equal(row.slug, approved.slug, `a linha ${position + 1} mantém o slug`);
+    assert.equal(row.index, approved.index, `${approved.slug} mantém o índice visual`);
+    assert.equal(row.title, approved.title, `${approved.slug} mantém o título`);
+    assert.equal(row.year, approved.year, `${approved.slug} mantém o ano`);
+    assert.deepEqual(row.stacks, approved.stacks, `${approved.slug} mantém as tecnologias e a ordem`);
+    assert.deepEqual(row.link, approved.link, `${approved.slug} mantém link e rótulo`);
+    assert.equal(row.privateCode, approved.privateCode, `${approved.slug} mantém o estado do código`);
+    assert.equal(row.open, "Abrir", `${approved.slug} mantém o botão Abrir`);
+    assert.equal(
+      row.labelledBy,
+      `${approved.slug}-title ${approved.slug}-year ${approved.slug}-stack`,
+      `${approved.slug} mantém o nome acessível da linha`,
+    );
+  });
+
+  const section = html.slice(html.indexOf('id="projetos"'), html.indexOf("</section>", html.indexOf('id="projetos"')));
+  assert.equal((section.match(/data-project-slug=/g) ?? []).length, 3, "a seção não ganha linha extra");
+  assert.equal((section.match(/class="row-preview"/g) ?? []).length, 3, "cada linha mantém uma prévia");
+});
+
+test("só o projeto público tem âncora de repositório, sem link privado nem legado", () => {
+  const html = readFileSync(pagePath, "utf8");
+  const section = html.slice(html.indexOf('id="projetos"'), html.indexOf("</section>", html.indexOf('id="projetos"')));
+  const anchors = [...section.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>([^<]+)</g)].map((m) => [m[1], m[2]]);
+
+  assert.deepEqual(anchors, [["https://github.com/nicolasponciano/open-mind", "GitHub"]]);
+  assert.equal((section.match(/>Código privado</g) ?? []).length, 2, "MarcAi e Seirei exibem Código privado");
+  assert.doesNotMatch(section, /href="#"/, "estado privado não pode virar link artificial");
+  assert.doesNotMatch(section, /disabled/, "estado privado não pode virar botão desabilitado");
+  assert.doesNotMatch(section, /ClienteAPI|Skill Upgrader|skill-upgrader|projeto-0\d/i, "projetos antigos saem da lista");
+  assert.doesNotMatch(section, /\.NET\b/, "a API .NET não entra em texto público");
+});
+
+test("as três fichas descrevem apenas o produto web aprovado", async () => {
+  const { projectDetails } = await import(
+    `${new URL("../src/data/portfolio.js", import.meta.url).href}?test=${Date.now()}`
+  );
+
+  Object.entries(projectDetails).forEach(([slug, entry]) => {
+    const publicText = [entry.role, entry.challenge, entry.solution, entry.schematic.purpose, ...entry.schematic.items].join(" ");
+    assert.doesNotMatch(publicText, /\.NET\b|ClienteAPI|Skill Upgrader|skill-upgrader/, `${slug} expõe conteúdo fora da seleção`);
+    assert.doesNotMatch(publicText, /postgresql:\/\/|Bearer\s+[A-Za-z0-9]|api[_-]?key\s*[:=]|secret\s*[:=]/i, `${slug} expõe dado sensível`);
+    assert.doesNotMatch(publicText, /\b(supabase\.co|vercel\.app|netlify\.app)\b/, `${slug} expõe endpoint de produção`);
+  });
+});
+
+test("os resumos das três linhas permanecem byte a byte iguais ao texto aprovado", () => {
+  const html = readFileSync(pagePath, "utf8");
+  const rows = readRows(html);
+
+  rows.forEach((row, position) => {
+    assert.equal(row.summary, APPROVED_ROWS[position].summary, `${row.slug} alterou o resumo`);
+    assert.doesNotMatch(row.summary, /…|\.\.\.$|\[A preencher\]/, `${row.slug} não pode truncar o resumo`);
+    assert.equal(Buffer.from(row.summary, "utf8").toString("utf8"), APPROVED_ROWS[position].summary);
+  });
+});
+
+test("as fichas mantêm papel, desafio e solução aprovados", async () => {
+  const { projectDetails } = await import(
+    `${new URL("../src/data/portfolio.js", import.meta.url).href}?test=${Date.now()}`
+  );
+
+  const approved = {
+    marcai: {
+      role: "Desenvolvimento individual do produto, do modelo de dados à interface.",
+      challenge:
+        "Impedir horário duplicado e vazamento de dados entre estabelecimentos quando duas pessoas tentam marcar o mesmo horário ao mesmo tempo.",
+      solution:
+        "Modelei o vínculo do usuário com o estabelecimento no token e apliquei verificação de conflito, chave de idempotência e limite de requisições nas rotas sensíveis, com testes para papéis e conflito.",
+      featured: true,
+      preview: "panel",
+      codeVisibility: "private",
+    },
+    seirei: {
+      role: "Desenvolvimento individual do produto, do schema ao aplicativo.",
+      challenge:
+        "Manter o foco em uma tarefa sem perder o que ficou para depois e continuar confiável quando a IA de ordenação falha.",
+      solution:
+        "Persisti ordem, dependências e duração no banco, validei a resposta da IA contra as tarefas reais do dia e mantive fallback explícito; a sincronização usa RLS por usuário e última gravação prevalecendo.",
+      featured: false,
+      preview: "flow",
+      codeVisibility: "private",
+    },
+    "open-mind": {
+      role: "Desenvolvimento individual do plugin, dos testes e da documentação.",
+      challenge:
+        "Dar contexto de notas locais a um agente sem expor caminhos absolutos e sem permitir escrita sem autorização.",
+      solution:
+        "Separei core, adaptador do OpenCode e acesso ao filesystem, confinei as operações à raiz do Vault e condicionei cada escrita a permissão explícita e ao hash da versão lida.",
+      featured: false,
+      preview: "terminal",
+      codeVisibility: "public",
+    },
+  };
+
+  assert.deepEqual(Object.keys(projectDetails), Object.keys(approved), "a ficha mantém os três projetos na ordem");
+  Object.entries(approved).forEach(([slug, expected]) => {
+    const { role, challenge, solution, featured, preview, codeVisibility } = projectDetails[slug];
+    assert.deepEqual(
+      { role, challenge, solution, featured, preview, codeVisibility },
+      expected,
+      `${slug} alterou a ficha`,
+    );
+  });
 });
 
 test("cada projeto tem slug único e correspondência nos detalhes", async () => {

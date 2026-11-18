@@ -2,6 +2,8 @@ import { normalizeSlug } from "./core.js";
 
 const fill = "[A preencher]";
 const previewTypes = ["panel", "terminal", "flow"];
+export const PRIVATE_CODE_LABEL = "Código privado";
+export const OBSOLETE_PROJECT_NOTICE = "A ficha deste projeto não está mais disponível no portfólio.";
 
 export function formatValue(value) {
   if (Array.isArray(value)) {
@@ -42,8 +44,14 @@ export function getProjectDetails(details, slug) {
     solution: formatValue(entry.solution),
     featured: entry.featured === true,
     preview: previewTypes.includes(entry.preview) ? entry.preview : "panel",
+    codeVisibility: entry.codeVisibility === "private" ? "private" : "public",
     schematic: entry.schematic ?? null,
   };
+}
+
+export function getDialogLinkState({ links = [], codeVisibility } = {}) {
+  if (Array.isArray(links) && links.length) return "links";
+  return codeVisibility === "private" ? "private" : "unavailable";
 }
 
 export function readRowData(row) {
@@ -89,10 +97,11 @@ export function fillProjectDialog(dialog, { row, details } = {}) {
   if (!linksBox) return;
 
   linksBox.replaceChildren();
-  if (!data.links.length) {
+  const linkState = getDialogLinkState({ links: data.links, codeVisibility: info.codeVisibility });
+  if (linkState !== "links") {
     const empty = document.createElement("span");
-    empty.className = "dialog-links-empty";
-    empty.textContent = fill;
+    empty.className = linkState === "private" ? "dialog-links-empty dialog-links-private" : "dialog-links-empty";
+    empty.textContent = linkState === "private" ? PRIVATE_CODE_LABEL : fill;
     linksBox.append(empty);
     return;
   }

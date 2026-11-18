@@ -20,7 +20,7 @@ Apresentar o perfil, os projetos e a trajetória de Nicolas Ponciano para apoiar
 
 ## Positioning
 
-Portfólio técnico editorial, de página única, que mostra o trabalho antes de qualquer efeito. A credibilidade vem do conteúdo verificável: três projetos reais com papel, desafio e solução, prévias esquemáticas derivadas das funcionalidades de cada repositório e a trajetória profissional e acadêmica. A montagem por cursores existe como demonstração opt-in, não como a experiência principal nem como agentes de IA.
+Portfólio técnico editorial, de página única, que mostra o trabalho antes de qualquer efeito. A credibilidade vem do conteúdo verificável: três projetos reais com papel, desafio e solução, prévias conceituais derivadas das funcionalidades de cada projeto e a trajetória profissional e acadêmica. A montagem por cursores existe como demonstração opt-in, não como a experiência principal nem como agentes de IA.
 
 ## Operating Context
 
@@ -29,7 +29,7 @@ Site publicado em https://nicolasponciano.github.io/, navegado por rolagem e ân
 ## Capabilities and Constraints
 
 - Conteúdo disponível na primeira renderização: herói com nome dominante, resumo, fatos verificáveis, duas ações, busca e palco de prévia.
-- Prévias esquemáticas por projeto, rotuladas como "Esquemático", compostas em HTML e CSS a partir dos dados, sem imagem, vídeo ou requisição.
+- Prévias conceituais por projeto, rotuladas como "Prévia conceitual", com propósito, quatro capacidades e stack, compostas em HTML e CSS a partir dos dados, sem imagem, vídeo ou requisição.
 - Pager manual com anterior, próximo e contador, em ordem circular e sem autoplay; com um projeto não há pager e com zero o palco fica vazio.
 - Índice com filtro por tecnologia em `?stack=`, contagem `N de M`, prévia por hover e foco e ficha aberta por `#projeto/<slug>`.
 - Trajetória com três experiências e três formações, sem métricas ou resultados inventados.
@@ -46,7 +46,7 @@ Site publicado em https://nicolasponciano.github.io/, navegado por rolagem e ân
 
 ## Evidence on Hand
 
-- Três repositórios públicos: ClienteAPI, Open Mind e Skill Upgrader.
+- Três projetos apresentados: MarcAi e Seirei, com código privado e sem link de repositório, e Open Mind, com repositório público em https://github.com/nicolasponciano/open-mind.
 - Currículo fornecido em 2026-11-17, usado como fonte exclusiva da seção Trajetória; o recorte editorial exclui a experiência de suporte de 2023 e o período na Plano Santa Casa Saúde.
 - Medições de responsividade e contraste nos temas tinta e papel registradas em `specs/portfolio-v1-1/`.
 - Capturas e revisão de acabamento em `.impeccable/review/`.

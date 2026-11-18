@@ -112,107 +112,107 @@ test("somente links HTTP, HTTPS e mailto válidos podem virar links", async () =
   assert.equal(isSafeExternalUrl("#projetos"), false);
 });
 
-test("todo projeto declara um esquema válido com nota e rodapé", async () => {
+test("todo projeto declara uma prévia conceitual com propósito e quatro capacidades", async () => {
   const { projectDetails } = await loadData();
   const slugs = Object.keys(projectDetails);
 
   slugs.forEach((slug) => {
     const { schematic } = projectDetails[slug];
     assert.ok(schematic, `${slug} precisa de schematic`);
-    assert.equal(schematic.note, "Esquemático", `${slug} precisa da nota Esquemático`);
-    assert.ok(typeof schematic.label === "string" && schematic.label.trim(), `${slug} precisa de rótulo`);
-    assert.ok(typeof schematic.foot === "string" && schematic.foot.trim(), `${slug} precisa de rodapé`);
-    assert.ok(Array.isArray(schematic.items), `${slug} precisa de itens`);
-    assert.ok(
-      schematic.items.length >= 4 && schematic.items.length <= 5,
-      `${slug} precisa de 4 a 5 itens, recebeu ${schematic.items.length}`,
+    assert.equal(schematic.note, "Prévia conceitual", `${slug} precisa da nota Prévia conceitual`);
+    assert.ok(typeof schematic.label === "string" && schematic.label.trim(), `${slug} precisa de categoria`);
+    assert.ok(typeof schematic.purpose === "string" && schematic.purpose.trim().length > 10, `${slug} precisa de propósito`);
+    assert.ok(Array.isArray(schematic.items), `${slug} precisa de capacidades`);
+    assert.equal(schematic.items.length, 4, `${slug} precisa de quatro capacidades`);
+    assert.deepEqual(
+      Object.keys(schematic).sort(),
+      ["items", "label", "note", "purpose"],
+      `${slug} só pode declarar categoria, nota, propósito e capacidades`,
     );
     schematic.items.forEach((item) => {
-      assert.ok(typeof item.tag === "string" && item.tag.trim(), `${slug} tem item sem tag`);
-      assert.ok(typeof item.text === "string" && item.text.trim().length > 2, `${slug} tem item sem texto`);
-      assert.doesNotMatch(item.text.trim(), /^(bloco|painel|fluxo)\b/i, `${slug} usa texto genérico como conteúdo`);
+      assert.equal(typeof item, "string", `${slug} tem capacidade que não é texto`);
+      assert.ok(item.trim().length > 2, `${slug} tem capacidade vazia`);
+      assert.doesNotMatch(item.trim(), /^(bloco|painel|fluxo)\b/i, `${slug} usa texto genérico como conteúdo`);
     });
   });
 });
 
-test("os esquemas usam apenas o conteúdo aprovado", async () => {
+test("as prévias usam apenas o conteúdo aprovado", async () => {
   const { projectDetails } = await loadData();
-  const first = projectDetails["projeto-01"].schematic;
-  const second = projectDetails["projeto-02"].schematic;
-  const third = projectDetails["projeto-03"].schematic;
 
-  assert.deepEqual(first, {
-    label: "API REST",
-    note: "Esquemático",
+  assert.deepEqual(projectDetails.marcai.schematic, {
+    label: "SaaS de agendamentos",
+    note: "Prévia conceitual",
+    purpose: "Plataforma de agendamentos para salões, clínicas e estúdios, com cada estabelecimento isolado no seu próprio espaço e horários calculados a partir da agenda real.",
     items: [
-      { tag: "POST", text: "Cadastro de cliente" },
-      { tag: "GET", text: "Consulta e pesquisa" },
-      { tag: "PUT", text: "Atualização" },
-      { tag: "DELETE", text: "Exclusão" },
+      "Agenda com horários disponíveis calculados por profissional, serviço e duração",
+      "Cada estabelecimento isolado, com papéis de dono e equipe aplicados no servidor",
+      "Criação de agendamento idempotente, com verificação de conflito e registro de auditoria",
+      "Página pública de agendamento por estabelecimento, do serviço à confirmação",
     ],
-    foot: "CEP validado em serviço externo",
   });
 
-  assert.deepEqual(third, {
-    label: "Auditoria de skills",
-    note: "Esquemático",
+  assert.deepEqual(projectDetails.seirei.schematic, {
+    label: "Produto web de produtividade",
+    note: "Prévia conceitual",
+    purpose: "Aplicativo que mostra uma tarefa por vez para ajudar a terminar o que se começa, no computador e no celular.",
     items: [
-      { tag: "ok", text: "Atualizado" },
-      { tag: "upd", text: "Atualização comprovada" },
-      { tag: "local", text: "Ignorada por alteração local" },
-      { tag: "gate", text: "Backup e rollback verificados" },
+      "Uma tarefa por vez no modo foco, com concluir, pular e nova rodada",
+      "Entrada por texto ou voz, com várias tarefas separadas automaticamente",
+      "Ordenação e duração estimadas por IA, validadas contra as tarefas do dia e com retorno à ordem de inserção quando a chamada falha",
+      "Sincronização entre computador e celular, com RLS por usuário e última gravação prevalecendo",
     ],
-    foot: "Sem repositório verificável, sem atualização",
   });
 
-  assert.equal(second.label, "Sessão de ferramentas");
-  assert.equal(second.items.length, 5);
-  assert.deepEqual(
-    second.items.map((item) => item.text),
-    [
-      "open_mind_status",
-      "open_mind_search",
-      "open_mind_read",
-      "open_mind_create",
-      "open_mind_update",
+  assert.deepEqual(projectDetails["open-mind"].schematic, {
+    label: "Ferramenta de desenvolvimento",
+    note: "Prévia conceitual",
+    purpose: "Plugin que leva o contexto de um Vault do Obsidian para dentro do OpenCode.",
+    items: [
+      "Contexto do Vault associado ao projeto da sessão pelo caminho",
+      "Busca e leitura confinadas à raiz do Vault, com caminho relativo e limites explícitos",
+      "Escrita desabilitada por padrão, liberada por operação e condicionada ao hash da versão lida",
+      "Seis ferramentas disponíveis ao OpenCode, de status e busca até criação e atualização de notas",
     ],
-    "cada uma das cinco ferramentas precisa de um item com o nome exato",
-  );
-  assert.equal(second.foot, "open_mind_project_context por sessão · escrita desabilitada por padrão");
+  });
 });
 
-test("as seis ferramentas do Open Mind aparecem sem fundir nomes", async () => {
+test("a seleção aprovada declara a visibilidade do código por projeto", async () => {
   const { projectDetails } = await loadData();
-  const { schematic } = projectDetails["projeto-02"];
-  const texts = schematic.items.map((item) => item.text);
-  const tools = [
-    "open_mind_status",
-    "open_mind_search",
-    "open_mind_read",
-    "open_mind_create",
-    "open_mind_update",
-    "open_mind_project_context",
-  ];
+  const { getProjectDetails, getDialogLinkState } = await loadContent();
 
-  tools.forEach((tool) => {
-    const inItems = texts.includes(tool);
-    const inFoot = schematic.foot.split("·").some((part) => part.trim().startsWith(tool));
-    assert.ok(inItems || inFoot, `${tool} precisa aparecer com o nome exato`);
-    if (tool === "open_mind_project_context") {
-      assert.equal(inItems, false, "o contexto de projeto fica no rodapé, não entre os itens");
-      assert.ok(inFoot, "open_mind_project_context precisa estar no rodapé");
-    }
+  assert.deepEqual(Object.keys(projectDetails), ["marcai", "seirei", "open-mind"]);
+  assert.equal(projectDetails.marcai.codeVisibility, "private");
+  assert.equal(projectDetails.seirei.codeVisibility, "private");
+  assert.equal(projectDetails["open-mind"].codeVisibility, "public");
+
+  assert.equal(getProjectDetails(projectDetails, "marcai").codeVisibility, "private");
+  assert.equal(getProjectDetails(projectDetails, "open-mind").codeVisibility, "public");
+  assert.equal(getProjectDetails(projectDetails, "nao-existe").codeVisibility, "public");
+
+  assert.equal(getDialogLinkState({ links: [], codeVisibility: "private" }), "private");
+  assert.equal(getDialogLinkState({ links: [], codeVisibility: "public" }), "unavailable");
+  assert.equal(
+    getDialogLinkState({ links: [{ label: "GitHub", url: "https://github.com/example" }], codeVisibility: "public" }),
+    "links",
+  );
+});
+
+test("as prévias não expõem identificadores internos nem verbos HTTP", async () => {
+  const { projectDetails } = await loadData();
+
+  Object.entries(projectDetails).forEach(([slug, entry]) => {
+    const joined = [entry.schematic.label, entry.schematic.purpose, ...entry.schematic.items].join(" ");
+    assert.doesNotMatch(joined, /open_mind_|project_context/, `${slug} não pode exibir identificador interno`);
+    assert.doesNotMatch(joined, /\b(POST|GET|PUT|DELETE)\b/, `${slug} não pode liderar com verbo HTTP`);
   });
-
-  const joined = [...texts, schematic.foot].join(" ");
-  assert.match(joined, /escrita desabilitada por padrão/);
 });
 
 test("o esquema não repete o conteúdo da linha do índice e o preview segue no enum", async () => {
   const { projectDetails } = await loadData();
   Object.entries(projectDetails).forEach(([slug, entry]) => {
     assert.ok(["panel", "terminal", "flow"].includes(entry.preview), `${slug} precisa manter o preview no enum`);
-    const forbidden = ["title", "summary", "stack", "stacks", "year", "links", "role", "challenge", "solution"];
+    const forbidden = ["title", "summary", "stack", "stacks", "year", "links", "role", "challenge", "solution", "foot", "tag"];
     Object.keys(entry.schematic).forEach((key) => {
       assert.equal(forbidden.includes(key), false, `${slug} não pode duplicar ${key} no esquema`);
     });
@@ -222,13 +222,13 @@ test("o esquema não repete o conteúdo da linha do índice e o preview segue no
 test("esquema inválido no dado cai no neutro do tipo sem quebrar", async () => {
   const { getSchematic } = await loadCore();
   const { projectDetails } = await loadData();
-  const broken = { ...projectDetails["projeto-02"], schematic: { label: "", items: [{ tag: "x", text: "" }] } };
+  const broken = { ...projectDetails.seirei, schematic: { label: "", items: ["   "] } };
 
-  assert.deepEqual(getSchematic(broken, projectDetails["projeto-02"].preview), {
-    label: "Terminal",
-    note: "Esquemático",
+  assert.deepEqual(getSchematic(broken, projectDetails.seirei.preview), {
+    label: "Fluxo",
+    note: "Prévia conceitual",
+    purpose: "",
     items: [],
-    foot: "",
   });
 });
 
@@ -246,7 +246,7 @@ test("o detalhe do projeto entrega o esquema para o renderizador", async () => {
   assert.equal(getProjectDetails({ x: { preview: "3d" } }, "x").schematic, null);
 });
 
-test("cada projeto rende um esquema pronto para a lista, com nota e rodapé", async () => {
+test("cada projeto rende uma prévia pronta para o palco e para a linha", async () => {
   const { getProjectDetails } = await loadContent();
   const { projectDetails } = await loadData();
   const { getSchematic } = await loadCore();
@@ -255,14 +255,20 @@ test("cada projeto rende um esquema pronto para a lista, com nota e rodapé", as
     const details = getProjectDetails(projectDetails, slug);
     const schematic = getSchematic(details, entry.preview);
 
-    assert.equal(schematic.note, "Esquemático");
+    assert.equal(schematic.note, "Prévia conceitual");
     assert.ok(schematic.label.length > 3, `${slug} precisa do tipo descritivo no palco`);
-    assert.ok(schematic.items.length >= 4, `${slug} precisa de pelo menos quatro elementos nomeados`);
-    assert.ok(schematic.foot.length > 5, `${slug} precisa de rodapé de contexto`);
+    assert.ok(schematic.purpose.length > 10, `${slug} precisa de propósito`);
+    assert.equal(schematic.items.length, 4, `${slug} precisa de quatro capacidades`);
     schematic.items.forEach((item) => {
-      assert.ok(item.tag.length > 0);
-      assert.ok(item.text.length > 2);
+      assert.equal(typeof item, "string");
+      assert.ok(item.length > 2);
     });
     assert.equal(schematic.label, entry.schematic.label);
   });
+});
+
+test("o aviso de projeto removido usa o texto aprovado", async () => {
+  const { OBSOLETE_PROJECT_NOTICE } = await loadContent();
+
+  assert.equal(OBSOLETE_PROJECT_NOTICE, "A ficha deste projeto não está mais disponível no portfólio.");
 });
