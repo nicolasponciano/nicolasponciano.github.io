@@ -262,16 +262,42 @@ svg {
   letter-spacing: 0.015em;
 }
 
-.wordmark-symbol {
-  display: grid;
-  width: 38px;
-  height: 34px;
-  place-items: center;
-  border: 1px solid var(--mint);
-  color: var(--mint-text);
-  font-family: "Atkinson Hyperlegible", monospace;
-  font-size: 13px;
-  letter-spacing: -0.08em;
+.wordmark-mark {
+  display: inline-flex;
+  flex: none;
+  width: 28px;
+  height: 33px;
+  align-items: center;
+  justify-content: center;
+}
+
+.wordmark-logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.wordmark-logo-light {
+  display: none;
+}
+
+html[data-theme="paper"] .wordmark-logo-dark {
+  display: none;
+}
+
+html[data-theme="paper"] .wordmark-logo-light {
+  display: block;
+}
+
+@media (prefers-color-scheme: light) {
+  html:not([data-theme]) .wordmark-logo-dark {
+    display: none;
+  }
+
+  html:not([data-theme]) .wordmark-logo-light {
+    display: block;
+  }
 }
 
 .site-nav {
@@ -2405,10 +2431,9 @@ html.motion-reduced :is(.theme-toggle, .button, .filter-tag, .filter-clear, .pro
     font-size: 13px;
   }
 
-  .wordmark-symbol {
-    width: 32px;
-    height: 30px;
-    font-size: 11px;
+  .wordmark-mark {
+    width: 25px;
+    height: 29px;
   }
 
   .site-nav .nav-contact {

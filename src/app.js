@@ -944,6 +944,16 @@ function syncThemeControls() {
 
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute("content", theme.current === "paper" ? "#f1f0e8" : "#0b1d27");
+
+  const icon = document.querySelector('link[rel="icon"][type="image/svg+xml"]');
+  if (icon) {
+    icon.setAttribute(
+      "href",
+      theme.current === "paper"
+        ? "assets/branding/icons/favicon-light.svg"
+        : "assets/branding/icons/favicon-dark.svg",
+    );
+  }
 }
 
 function applyTheme(value) {

@@ -7,6 +7,16 @@
     <meta name="description" content="Portfólio de Nicolas Ponciano, desenvolvedor de software Full Stack.">
     <title>Nicolas Ponciano | Desenvolvedor Full Stack</title>
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="assets/branding/icons/favicon.ico" sizes="48x48">
+    <link rel="apple-touch-icon" href="assets/branding/icons/apple-touch-icon.png">
+    <link rel="manifest" href="assets/branding/icons/site.webmanifest">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Nicolas Ponciano | Desenvolvedor Full Stack">
+    <meta property="og:description" content="Portfólio de Nicolas Ponciano, desenvolvedor de software Full Stack.">
+    <meta property="og:image" content="https://nicolasponciano.github.io/assets/branding/social/og-image-dark.png">
+    <meta property="og:image:alt" content="Logotipo do portfólio de Nicolas Ponciano sobre fundo escuro">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://nicolasponciano.github.io/assets/branding/social/og-image-dark.png">
     <script>
       (function () {
         var root = document.documentElement;
@@ -15,7 +25,11 @@
         try {
           if (matchMedia("(prefers-reduced-motion: reduce)").matches) root.classList.add("motion-reduced");
           var stored = localStorage.getItem("portfolio-theme");
-          if (stored === "paper" || stored === "ink") root.dataset.theme = stored;
+          var valid = stored === "paper" || stored === "ink";
+          if (valid) root.dataset.theme = stored;
+          var theme = valid ? stored : matchMedia("(prefers-color-scheme: light)").matches ? "paper" : "ink";
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute("content", theme === "paper" ? "#f1f0e8" : "#0b1d27");
         } catch (error) {}
       })();
     </script>
@@ -27,7 +41,10 @@
 
     <header class="site-header">
       <a class="wordmark" href="#topo" aria-label="Início do portfólio">
-        <span class="wordmark-symbol" aria-hidden="true">&lt;/&gt;</span>
+        <span class="wordmark-mark" aria-hidden="true">
+          <img class="wordmark-logo wordmark-logo-dark" src="assets/branding/svg/logo-dark.svg" alt="" width="28" height="33">
+          <img class="wordmark-logo wordmark-logo-light" src="assets/branding/svg/logo-light.svg" alt="" width="28" height="33">
+        </span>
           <span data-content="profile.name">Nicolas Ponciano</span>
       </a>
       <div class="header-actions">
