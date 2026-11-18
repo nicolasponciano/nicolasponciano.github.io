@@ -88,6 +88,7 @@ test("cada projeto tem ano, resumo e stack reais", { skip: !publicar }, () => {
     assert.match(year.trim(), /^\d{4}$/, `${slug} sem ano`);
     assert.ok(summary.trim() && !placeholders.some((placeholder) => summary.includes(placeholder)), `${slug} sem resumo`);
     assert.ok(stacks.length > 0 && stacks.every((stack) => stack.trim()), `${slug} sem stack`);
+    assert.equal(stacks.length, 3, `${slug} precisa de três tecnologias na linha`);
     stacks.forEach((stack) => {
       assert.equal(
         placeholders.some((placeholder) => stack.includes(placeholder)),
@@ -96,4 +97,25 @@ test("cada projeto tem ano, resumo e stack reais", { skip: !publicar }, () => {
       );
     });
   });
+});
+
+test("a publicação expõe três projetos na ordem aprovada, sem link privado", { skip: !publicar }, async () => {
+  const html = readHtml();
+  const details = await loadDetails();
+  const blocks = projectBlocks(html);
+  const slugs = blocks.map((block) => block.match(/data-project-slug="([^"]+)"/)?.[1] ?? "");
+
+  assert.deepEqual(slugs, ["marcai", "seirei", "open-mind"]);
+  assert.deepEqual(Object.keys(details), ["marcai", "seirei", "open-mind"]);
+  assert.doesNotMatch(html, /ClienteAPI|Skill Upgrader|projeto-0\d/i, "projetos antigos não podem permanecer publicados");
+
+  const privateBlocks = blocks.filter((block) => /Código privado/.test(block));
+  assert.equal(privateBlocks.length, 2, "MarcAi e Seirei ficam como código privado");
+  privateBlocks.forEach((block) => {
+    const slug = block.match(/data-project-slug="([^"]+)"/)?.[1] ?? "desconhecido";
+    assert.doesNotMatch(block, /<a\b[^>]*href=/, `${slug} não pode expor link de repositório`);
+  });
+
+  const publicBlock = blocks.find((block) => /data-project-slug="open-mind"/.test(block)) ?? "";
+  assert.match(publicBlock, /<a href="https:\/\/github\.com\/nicolasponciano\/open-mind"[^>]*>GitHub</, "Open Mind mantém o link público");
 });

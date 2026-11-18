@@ -36,9 +36,9 @@
           <a href="#sobre">Sobre</a>
           <a class="nav-contact" href="#contato">Contato <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M5 15 15 5M7 5h8v8" /></svg></a>
         </nav>
-        <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false" aria-label="Tema papel">
+        <button type="button" class="theme-toggle" id="theme-toggle">
           <svg aria-hidden="true" viewBox="0 0 20 20"><circle cx="10" cy="10" r="6.5" /><path d="M10 3.5v13" /></svg>
-          <span class="theme-toggle-label">Tema papel</span>
+          <span class="theme-toggle-label" data-theme-label>Ativar tema papel</span>
         </button>
       </div>
     </header>
@@ -46,9 +46,14 @@
     <main id="conteudo">
       <section class="hero section-shell" id="topo" data-section="hero" data-section-label="Apresentação">
         <div class="hero-copy">
-           <h1>Desenvolvedor de Software Full Stack</h1>
-           <p class="hero-name">Nicolas Ponciano</p>
-           <p class="hero-summary">Desenvolvedor de Software com experiência em .NET, desenvolvimento web, APIs, bancos de dados e integrações. Construo e evoluo soluções corporativas com atenção à arquitetura, qualidade e automação, enquanto aprofundo meus estudos em inteligência artificial.</p>
+          <p class="hero-kicker">Desenvolvedor de Software Full Stack</p>
+          <h1>Nicolas Ponciano</h1>
+          <p class="hero-summary">Desenvolvedor de Software com experiência em .NET, desenvolvimento web, APIs, bancos de dados e integrações. Construo e evoluo soluções corporativas com atenção à arquitetura, qualidade e automação, enquanto aprofundo meus estudos em inteligência artificial.</p>
+          <ul class="hero-facts">
+            <li>Backend .NET e SQL Server</li>
+            <li>Sistemas web corporativos</li>
+            <li>Pós-graduação em IA em andamento</li>
+          </ul>
           <div class="hero-actions">
             <a class="button button-primary" href="#projetos">
               Explorar projetos
@@ -64,21 +69,34 @@
           </div>
         </div>
 
-        <div class="hero-stage preview-stage" data-preview-stage aria-hidden="true">
-          <div class="stage-chrome">
+        <div class="hero-stage preview-stage" data-preview-stage role="group" aria-label="Prévia de projetos">
+          <div class="stage-chrome" aria-hidden="true">
             <span class="stage-title" data-preview-title></span>
             <span class="stage-kind" data-preview-kind></span>
+            <span class="stage-note"></span>
           </div>
-          <div class="stage-canvas" data-preview-canvas></div>
-          <div class="stage-foot">
+          <div class="stage-canvas" data-preview-canvas aria-hidden="true"></div>
+          <div class="stage-foot" aria-hidden="true">
             <span>Tecnologias</span>
             <span data-preview-stack></span>
           </div>
+          <div class="stage-pager" data-stage-pager>
+            <button type="button" class="stage-button" data-stage-prev aria-label="Prévia anterior"><span aria-hidden="true">←</span></button>
+            <p class="stage-count" data-stage-count aria-hidden="true">01 / 03</p>
+            <button type="button" class="stage-button" data-stage-next aria-label="Próxima prévia"><span aria-hidden="true">→</span></button>
+          </div>
+          <p class="sr-only" data-stage-live aria-live="polite" aria-atomic="true"></p>
         </div>
 
         <div class="hero-foot">
           <span>Interfaces, serviços e dados</span>
-          <a href="#projetos" aria-label="Ir para projetos">Desça para explorar <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M10 3v13m-5-5 5 5 5-5" /></svg></a>
+          <div class="hero-foot-actions">
+            <a href="#projetos" aria-label="Ir para projetos">Desça para explorar <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M10 3v13m-5-5 5 5 5-5" /></svg></a>
+            <button type="button" class="scene-button" id="scene-button" hidden>
+              <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M4 4h12v12H4zM8 7l5 3-5 3z" /></svg>
+              Ver montagem
+            </button>
+          </div>
         </div>
       </section>
 
@@ -93,30 +111,31 @@
           </div>
           <p class="filter-count" id="filter-count" aria-live="polite" aria-atomic="true">3 de 3</p>
         </div>
+        <p class="project-notice" id="project-notice" role="status" aria-live="polite" aria-atomic="true" hidden></p>
         <div class="work-layout">
           <div class="project-list">
-            <article class="project-entry" data-project data-project-slug="projeto-01" tabindex="0" aria-labelledby="projeto-01-title projeto-01-year projeto-01-stack">
+            <article class="project-entry" data-project data-project-slug="marcai" tabindex="0" aria-labelledby="marcai-title marcai-year marcai-stack">
               <span class="project-index" aria-hidden="true">01</span>
               <div class="project-main">
-               <h3 id="projeto-01-title">ClienteAPI</h3>
-               <p>API RESTful para cadastro, consulta, pesquisa, atualização e exclusão de clientes, com validação de CEP por serviço externo.</p>
+               <h3 id="marcai-title">MarcAi</h3>
+               <p>Plataforma de agendamentos multi-tenant com agenda por profissional, papéis de acesso e página pública de agendamento.</p>
               </div>
               <div class="project-meta">
-                <div class="meta-block" id="projeto-01-year">
+                <div class="meta-block" id="marcai-year">
                   <span class="meta-label">Ano</span>
-                   <span data-project-year>2025</span>
+                   <span data-project-year>2026</span>
                 </div>
-                <div class="meta-block" id="projeto-01-stack">
+                <div class="meta-block" id="marcai-stack">
                   <span class="meta-label">Tecnologias</span>
                   <span class="stack-list">
-                     <span class="stack-tag">C#</span>
-                     <span class="stack-tag">.NET 8</span>
-                     <span class="stack-tag">SQL Server</span>
+                     <span class="stack-tag">Next.js</span>
+                     <span class="stack-tag">TypeScript</span>
+                     <span class="stack-tag">PostgreSQL</span>
                   </span>
                 </div>
                 <div class="meta-block">
                   <span class="meta-label">Links</span>
-                <span class="project-links"><a href="https://github.com/nicolasponciano/ClienteAPI" target="_blank" rel="noopener noreferrer">GitHub</a></span>
+                <span class="project-links project-links-private">Código privado</span>
                 </div>
               </div>
               <div class="project-actions">
@@ -125,18 +144,48 @@
               </div>
               <div class="row-preview" data-row-preview aria-hidden="true"></div>
             </article>
-            <article class="project-entry" data-project data-project-slug="projeto-02" tabindex="0" aria-labelledby="projeto-02-title projeto-02-year projeto-02-stack">
+            <article class="project-entry" data-project data-project-slug="seirei" tabindex="0" aria-labelledby="seirei-title seirei-year seirei-stack">
               <span class="project-index" aria-hidden="true">02</span>
               <div class="project-main">
-               <h3 id="projeto-02-title">Open Mind</h3>
-               <p>Plugin para OpenCode V2 que consulta um Vault do Obsidian em Markdown e fornece contexto e ferramentas de leitura.</p>
+               <h3 id="seirei-title">Seirei</h3>
+               <p>Aplicativo de foco que mostra uma tarefa por vez, ordena o dia com IA e sincroniza entre dispositivos.</p>
               </div>
               <div class="project-meta">
-                <div class="meta-block" id="projeto-02-year">
+                <div class="meta-block" id="seirei-year">
                   <span class="meta-label">Ano</span>
                    <span data-project-year>2026</span>
                 </div>
-                <div class="meta-block" id="projeto-02-stack">
+                <div class="meta-block" id="seirei-stack">
+                  <span class="meta-label">Tecnologias</span>
+                  <span class="stack-list">
+                     <span class="stack-tag">Next.js</span>
+                     <span class="stack-tag">TypeScript</span>
+                     <span class="stack-tag">Supabase</span>
+                  </span>
+                </div>
+                <div class="meta-block">
+                  <span class="meta-label">Links</span>
+                <span class="project-links project-links-private">Código privado</span>
+                </div>
+              </div>
+              <div class="project-actions">
+                <button type="button" class="project-open" hidden>Abrir</button>
+                <span class="project-arrow" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M5 15 15 5M7 5h8v8" /></svg></span>
+              </div>
+              <div class="row-preview" data-row-preview aria-hidden="true"></div>
+            </article>
+            <article class="project-entry" data-project data-project-slug="open-mind" tabindex="0" aria-labelledby="open-mind-title open-mind-year open-mind-stack">
+              <span class="project-index" aria-hidden="true">03</span>
+              <div class="project-main">
+               <h3 id="open-mind-title">Open Mind</h3>
+               <p>Plugin para OpenCode que transforma um Vault do Obsidian em contexto de projeto, com leitura confinada e escrita desabilitada por padrão.</p>
+              </div>
+              <div class="project-meta">
+                <div class="meta-block" id="open-mind-year">
+                  <span class="meta-label">Ano</span>
+                   <span data-project-year>2026</span>
+                </div>
+                <div class="meta-block" id="open-mind-stack">
                   <span class="meta-label">Tecnologias</span>
                   <span class="stack-list">
                      <span class="stack-tag">TypeScript</span>
@@ -147,36 +196,6 @@
                 <div class="meta-block">
                   <span class="meta-label">Links</span>
                 <span class="project-links"><a href="https://github.com/nicolasponciano/open-mind" target="_blank" rel="noopener noreferrer">GitHub</a></span>
-                </div>
-              </div>
-              <div class="project-actions">
-                <button type="button" class="project-open" hidden>Abrir</button>
-                <span class="project-arrow" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M5 15 15 5M7 5h8v8" /></svg></span>
-              </div>
-              <div class="row-preview" data-row-preview aria-hidden="true"></div>
-            </article>
-            <article class="project-entry" data-project data-project-slug="projeto-03" tabindex="0" aria-labelledby="projeto-03-title projeto-03-year projeto-03-stack">
-              <span class="project-index" aria-hidden="true">03</span>
-              <div class="project-main">
-               <h3 id="projeto-03-title">Skill Upgrader</h3>
-               <p>Skill para OpenCode que audita origem e versão de skills e só atualiza pacotes quando a mudança é comprovada e reversível.</p>
-              </div>
-              <div class="project-meta">
-                <div class="meta-block" id="projeto-03-year">
-                  <span class="meta-label">Ano</span>
-                   <span data-project-year>2026</span>
-                </div>
-                <div class="meta-block" id="projeto-03-stack">
-                  <span class="meta-label">Tecnologias</span>
-                  <span class="stack-list">
-                     <span class="stack-tag">Markdown</span>
-                     <span class="stack-tag">OpenCode</span>
-                     <span class="stack-tag">Git</span>
-                  </span>
-                </div>
-                <div class="meta-block">
-                  <span class="meta-label">Links</span>
-                <span class="project-links"><a href="https://github.com/nicolasponciano/skill-upgrader" target="_blank" rel="noopener noreferrer">GitHub</a></span>
                 </div>
               </div>
               <div class="project-actions">
@@ -196,12 +215,73 @@
               <span class="stage-title" data-preview-title></span>
               <span class="stage-kind" data-preview-kind></span>
             </div>
-            <div class="stage-canvas" data-preview-canvas></div>
+            <div class="stage-canvas" data-preview-canvas aria-hidden="true"></div>
             <div class="stage-foot">
               <span>Tecnologias</span>
               <span data-preview-stack></span>
             </div>
           </aside>
+        </div>
+      </section>
+
+      <section class="path-section section-shell" id="trajetoria" data-section="path" data-section-label="Trajetória">
+        <div class="section-heading">
+          <h2>Trajetória</h2>
+          <p>Experiência em desenvolvimento de software e formação.</p>
+        </div>
+        <div class="path-layout">
+          <div class="path-group">
+            <h3>Experiência</h3>
+            <ol class="path-list">
+              <li class="path-item">
+                <p class="path-period">fev. 2026 a atual</p>
+                <div class="path-body">
+                  <p class="path-role">Desenvolvedor de Software Júnior</p>
+                  <p class="path-org">Empresa do setor de tecnologia <span class="path-place">Rio de Janeiro</span></p>
+                </div>
+              </li>
+              <li class="path-item">
+                <p class="path-period">jul. 2025 a fev. 2026</p>
+                <div class="path-body">
+                  <p class="path-role">Desenvolvedor de Software Júnior</p>
+                  <p class="path-org">SOFTCASE Soluções Tecnológicas <span class="path-place">Santos</span></p>
+                </div>
+              </li>
+              <li class="path-item">
+                <p class="path-period">jul. 2024 a jul. 2025</p>
+                <div class="path-body">
+                  <p class="path-role">Estágio em Desenvolvimento de Software</p>
+                  <p class="path-org">SOFTCASE Soluções Tecnológicas <span class="path-place">São Vicente</span></p>
+                </div>
+              </li>
+            </ol>
+          </div>
+          <div class="path-group">
+            <h3>Formação</h3>
+            <ol class="path-list">
+              <li class="path-item">
+                <p class="path-period">fev. 2026 a fev. 2027 <span class="path-note">em andamento</span></p>
+                <div class="path-body">
+                  <p class="path-role">Pós-Graduação em Inteligência Artificial</p>
+                  <p class="path-org">Universidade Santa Cecília</p>
+                </div>
+              </li>
+              <li class="path-item">
+                <p class="path-period">fev. 2023 a jun. 2025</p>
+                <div class="path-body">
+                  <p class="path-role">Tecnólogo em Análise e Desenvolvimento de Sistemas</p>
+                  <p class="path-org">Universidade Santa Cecília</p>
+                </div>
+              </li>
+              <li class="path-item">
+                <p class="path-period">fev. 2022 a jul. 2023</p>
+                <div class="path-body">
+                  <p class="path-role">Ensino Técnico em Tecnologia da Informação</p>
+                  <p class="path-org">ETEC Praia Grande</p>
+                </div>
+              </li>
+            </ol>
+          </div>
         </div>
       </section>
 
@@ -298,11 +378,6 @@
         </div>
       </div>
     </dialog>
-
-    <button type="button" class="scene-button" id="scene-button" hidden>
-      <svg aria-hidden="true" viewBox="0 0 20 20"><path d="M4 4h12v12H4zM8 7l5 3-5 3z" /></svg>
-      Ver montagem
-    </button>
 
     <footer class="site-footer">
        <span data-content="profile.name">Nicolas Ponciano</span>

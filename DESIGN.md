@@ -1,6 +1,6 @@
 ---
 name: Portfólio Full Stack
-description: Portfólio de página única com índice de trabalho, ficha de projeto e busca por comando.
+description: Portfólio de página única com herói dominante, prévias conceituais, índice de trabalho, ficha de projeto, trajetória e busca por comando.
 colors:
   ink: "#0b1d27"
   ink-raised: "#102a35"
@@ -16,10 +16,10 @@ colors:
 typography:
   display:
     fontFamily: "Big Shoulders Display, Impact, sans-serif"
-    fontSize: "clamp(62px, 7vw, 96px)"
+    fontSize: "clamp(64px, 9.5vw, 136px)"
     fontWeight: 700
-    lineHeight: 0.82
-    letterSpacing: "-0.025em"
+    lineHeight: 0.84
+    letterSpacing: "-0.03em"
   heading:
     fontFamily: "Big Shoulders Display, Impact, sans-serif"
     fontSize: "clamp(52px, 7.5vw, 102px)"
@@ -70,7 +70,8 @@ components:
     backgroundColor: "{colors.ink-raised}"
     textColor: "{colors.paper}"
     rounded: "0px"
-    padding: "8px 11px"
+    padding: "0 16px"
+    height: "44px"
   project-sheet:
     backgroundColor: "{colors.sheet}"
     textColor: "{colors.sheet-ink}"
@@ -79,31 +80,43 @@ components:
 
 ## Overview
 
-Portfólio de página única para candidaturas full stack, publicado como mesa técnica editorial. O conteúdo aparece inteiro na primeira renderização: hero com cópia e palco de prévia, índice de trabalho com filtro por stack, ficha de projeto em `<dialog>` e busca por comando. A montagem por cursores deixou de bloquear a leitura e virou uma cena opcional de 6 a 8 s, acionada por um único botão, sobre conteúdo já visível.
+Portfólio de página única para candidaturas full stack, publicado como mesa técnica editorial. O conteúdo aparece inteiro na primeira renderização: herói com nome dominante e palco de prévia, índice de trabalho com filtro por stack, seção Trajetória, ficha de projeto em `<dialog>` e busca por comando. As prévias são esquemas derivados das funcionalidades reais de cada projeto, não composições genéricas. A montagem por cursores é uma cena opcional de 6 a 8 s, acionada por um botão no rodapé do herói, sobre conteúdo já visível.
 
 ## Colors
 
-Dois planos de cor do mesmo vocabulário. Fundo azul-petróleo (`ink`), texto em `paper`, secundários em `paper-dim` e `muted`, grade de 48 px em turquesa a 3,5%. Acentos com função fixa: turquesa para interface e foco, lima para o nome, coral para o terceiro item e o bloco de entrega. A seção de contato inverte para turquesa com texto em `ink`.
+Dois planos de cor do mesmo vocabulário. Fundo azul-petróleo (`ink`), texto em `paper`, secundários em `paper-dim` e `muted`, grade de 48 px em turquesa a 3,5%. Acentos com função fixa: turquesa para interface e foco, lima para o nome e para o foco/hover de controles, coral para o terceiro item e o bloco de entrega. A seção de contato inverte para turquesa com texto em `ink`.
 
 O tema papel troca os tokens: `--ink` vira `#f1f0e8`, `--paper` vira `#0b1d27`, `paper-dim` e `muted` escurecem, acentos de texto usam variantes escuras (`--mint-text`, `--lime-text`, `--coral-text`). Ficha e palette são sempre folhas claras: `--sheet` e `--sheet-ink` não mudam com o tema. Preferência em `localStorage` (`portfolio-theme`), aplicada por script inline antes do CSS; sem JS ou sem valor salvo, `prefers-color-scheme` decide.
 
-Contraste medido em 2026-11-17 por estilo computado (alfa composto sobre o fundo real): mínimo 6,61:1 no tema tinta e 5,38:1 no tema papel; ficha e palette 5,63:1 nas folhas claras. Nenhum par abaixo de 4,5:1.
+Contraste medido em 2026-11-17 por estilo computado (alfa composto sobre o fundo real), incluindo os controles da v1.1: mínimo 6,61:1 no tema tinta e 5,53:1 no tema papel. Ficha e palette ficam em 5,63:1 nas folhas claras. Nenhum par abaixo de 4,5:1.
 
 ## Typography
 
-Display condensado em caixa alta para títulos, com entrelinha curta e tracking entre -0,025em e -0,015em. Corpo em Atkinson Hyperlegible, com medida entre 58ch e 66ch. Metadados pequenos em caixa alta com tracking 0,09em. Fontes auto-hospedadas em `assets/fonts` sob SIL Open Font License 1.1.
+Display condensado em caixa alta para títulos, com entrelinha curta e tracking entre -0,03em e -0,015em. O `h1` do herói é o maior texto da página: `clamp(64px, 9.5vw, 136px)`, entrelinha 0,84, e não usa `overflow-wrap: anywhere`. Corpo em Atkinson Hyperlegible, com medida entre 54ch e 66ch. Metadados pequenos em caixa alta com tracking 0,09em. Fontes auto-hospedadas em `assets/fonts` sob SIL Open Font License 1.1.
 
 ## Layout
 
-Página centralizada em 1440 px com gutter fluido. Hero ocupa a primeira tela em duas colunas (texto e palco de prévia), passando a uma coluna abaixo de 1020 px. Seções empilhadas com borda superior de 1 px e respiro de 84 a 168 px.
+Página centralizada em 1440 px com gutter fluido. O herói ocupa a primeira tela em duas colunas (cópia e palco de prévia) acima de 1020 px e passa a uma coluna abaixo disso. Seções empilhadas com borda superior de 1 px e respiro de 84 a 168 px.
 
-Índice de trabalho em duas colunas: lista e palco fixo. O palco fica com 40% da largura até 1024 px e some abaixo de 768 px, quando a prévia passa para dentro da linha. A linha de projeto usa quatro colunas (índice, título e resumo, metadados, ações) somente a partir de 1440 px; abaixo disso os metadados empilham sob o título, mantendo a coluna de texto legível entre 1200 e 1439 px. Abaixo de 720 px as ações vão para a linha seguinte.
+Ordem de leitura do herói:
+
+1. `p.hero-kicker`: "Desenvolvedor de Software Full Stack", meta em caixa alta, turquesa.
+2. `h1`: "Nicolas Ponciano", display dominante.
+3. `p.hero-summary`: resumo aprovado, máximo 54ch.
+4. `ul.hero-facts`: três fatos verificáveis, em três colunas com hairlines; uma coluna abaixo de 720 px.
+5. `.hero-actions`: "Explorar projetos" e "Entrar em contato".
+6. `.hero-search`: campo que abre a palette.
+7. `.hero-foot`: "Interfaces, serviços e dados", link "Desça para explorar" e o botão "Ver montagem".
+
+Índice de trabalho em duas colunas: lista e palco fixo. O palco fica com 40% da largura até 1024 px e some em 768 px ou menos, quando a prévia passa para dentro da linha. A linha de projeto usa quatro colunas (índice, título e resumo, metadados, ações) somente a partir de 1440 px; abaixo disso os metadados empilham sob o título, mantendo a coluna de texto legível entre 1200 e 1439 px. Abaixo de 720 px as ações vão para a linha seguinte.
+
+A Trajetória usa duas colunas iguais com gap de 44 px a partir de 1024 px e uma coluna abaixo disso; em 768 px ou menos o período aparece acima do cargo.
 
 Ficha e palette ocupam a tela cheia abaixo de 480 px, com o fechar sempre visível. Em 390 px a página é uma coluna, as ações ocupam a largura toda e os filtros rolam dentro do próprio contêiner. Sem rolagem horizontal em nenhuma largura.
 
 ## Elevation & Depth
 
-Não há sombras decorativas. Profundidade vem de planos de cor (`ink`, `ink-raised`), hairlines de 1 px, do backdrop das folhas e da sobreposição explícita entre cursores, seleção e esqueleto durante a cena. O botão "Ver montagem" flutua com sombra deslocada; o `.hero-foot` reserva espaço à direita, a partir de 721 px, para ele não cobrir o link.
+Não há sombras decorativas. Profundidade vem de planos de cor (`ink`, `ink-raised`), hairlines de 1 px, do backdrop das folhas e da sobreposição explícita entre cursores, seleção e esqueleto durante a cena. O botão "Ver montagem" fica no fluxo do `.hero-foot`, sem posicionamento fixo e sem cobrir conteúdo; abaixo de 720 px o rodapé do herói passa a `position: static`.
 
 ## Shapes
 
@@ -111,26 +124,62 @@ Cantos retos em todos os elementos: botões, campos, linhas, folhas e controles.
 
 ## Components
 
-- Botão primário: bloco turquesa, texto em tinta, sem raio, escala 0,98 no clique.
-- Hero: título, nome, resumo, duas ações e campo de busca que abre a palette (`Ctrl+K`/`⌘+K`).
-- Palco de prévia: moldura 4:3 `aria-hidden`, barra de título e composição por tipo (`panel`, `terminal`, `flow`) montada em HTML/CSS. Fixo no índice em desktop, dentro da linha em toque.
-- Linha de projeto: índice, título, resumo, ano, stack, botão "Abrir" e links externos reais; hover e foco trocam a prévia em 160 ms.
-- Filtro: tags com `aria-pressed`, contagem `N de M` em `aria-live` e estado vazio com "Limpar filtro".
-- Ficha: folha clara em `<dialog>`, título, resumo, papel, desafio, solução, stack, ano e links clonados da linha.
-- Palette: `<dialog>` estreito com `role="listbox"`, setas, Home, End, Enter e Esc.
-- Botão de tema: nome acessível fixo "Tema papel", `aria-pressed` fiel ao tema e persistência local.
-- Contato: `mailto:` visível e botão que copia o endereço com confirmação em `aria-live`.
-- "Ver montagem": botão único, fora do fluxo, oculto sem JS e com movimento reduzido; a cena usa 6 cursores no desktop e 4 no mobile, nunca oculta conteúdo e para na primeira interação.
+- **Botão primário**: bloco turquesa, texto em tinta, sem raio, escala 0,98 no clique.
+- **Herói**: kicker com o papel, `h1` com o nome, resumo, linha de fatos, duas ações e busca que abre a palette (`Ctrl+K`/`⌘+K`).
+- **Palco de prévia**: moldura `aria-hidden` no miolo, barra de título, tipo descritivo e nota "Prévia conceitual", canvas `aria-hidden` e rodapé com a stack. O conteúdo é composto em HTML/CSS a partir do `schematic` do projeto, com `ol.schematic-list`, `purpose` e no máximo quatro itens; tipo desconhecido ou esquema inválido cai no bloco neutro `panel`. No índice é fixo em desktop e entra dentro da linha em toque.
+- **Palco estável do herói**: a altura útil é comum aos três projetos em cada faixa de largura e acompanha o conteúdo mais alto, sem corte e sem rolagem interna. Referências medidas: cerca de 520 px até 400 px, 486 px entre 401 e 650 px, 410 px entre 651 e 768 px, 486 px entre 769 e 1439 px e 432 px a partir de 1440 px. A altura não anima, então o pager permanece no mesmo Y; se um projeto crescer, a caixa cresce junto.
+- **Pager manual**: dois botões de 44 × 44 px, "Prévia anterior" e "Próxima prévia", contador visível `01 / 03` em `aria-hidden` e região `aria-live="polite"` que anuncia "`<título>`, prévia N de M" após a troca. Ordem circular, sem timer ou autoplay. Com dois ou mais projetos o pager aparece; com um projeto o esquema aparece sem pager nem contador; com zero o palco fica vazio.
+- **Linha de projeto**: índice, título, resumo, ano, stack, botão "Abrir" e links externos reais; hover e foco trocam a prévia do índice em 160 ms. Abaixo de 720 px o cabeçalho da prévia de linha quebra e mostra a stack inteira.
+- **Filtro**: tags com `aria-pressed`, contagem `N de M` em `aria-live` e estado vazio com "Limpar filtro"; o filtro vive em `?stack=`.
+- **Ficha**: folha clara em `<dialog>`, título, resumo, papel, desafio, solução, stack, ano e links clonados da linha; aberta por "Abrir" ou `#projeto/<slug>`.
+- **Palette**: `<dialog>` estreito com `role="listbox"`, busca sem caixa e sem acento, setas, Home, End, Enter e Esc; bloqueada enquanto a ficha está aberta.
+- **Trajetória**: `#trajetoria` entre Projetos e Sobre, com dois grupos (`h3` Experiência e Formação) e listas ordenadas. Cada item mostra período, cargo ou curso e organização; a pós-graduação leva a nota "em andamento". Não entra na navegação do cabeçalho e entra na palette por `data-section-label`.
+- **Botão de tema**: rótulo de ação, "Ativar tema papel" no tema tinta e "Ativar tema tinta" no papel, sem `aria-pressed`; o nome acessível é o próprio texto e a persistência continua local.
+- **Contato**: `mailto:` visível e botão que copia o endereço com confirmação em `aria-live`.
+- **"Ver montagem"**: botão único dentro de `.hero-foot-actions`, oculto sem JS e com movimento reduzido; a cena usa 6 cursores no desktop e 4 em telas compactas, nunca oculta conteúdo e para na primeira interação.
 
 ## Motion
 
-Tokens únicos em `:root`: `--dur-1` 120 ms (hover, press, cor), `--dur-2` 160 ms (troca de prévia, foco), `--dur-3` 200 ms (entrada da palette), `--dur-4` 240 ms (entrada da ficha). Só `transform` e `opacity` movem; cor, borda e fundo podem transicionar. Press usa `scale(0.98)`. Com `prefers-reduced-motion: reduce`, durações caem para `0.00001s`, `transform` é removido e a cena não é oferecida.
+Tokens únicos em `:root`: `--dur-1` 120 ms (hover, press, cor), `--dur-2` 160 ms (troca de prévia, foco), `--dur-3` 200 ms (entrada da palette), `--dur-4` 240 ms (entrada da ficha). Só `transform` e `opacity` movem; cor, borda e fundo podem transicionar. Press usa `scale(0.98)` nos botões, no pager e no botão de montagem; o link textual "Entrar em contato" responde ao press apenas com cor, sem deslocar a linha. Com `prefers-reduced-motion: reduce`, durações caem para `0.00001s`, `transform` é removido e a cena não é oferecida. Nenhuma transição anima `width`, `height`, `top`, `left`, `margin`, `padding`, `gap` ou `all`.
+
+## Accessibility
+
+- O palco do herói é `role="group"` com nome acessível "Prévia de projetos"; chrome, canvas e rodapé são `aria-hidden`, e o pager é a única parte focável.
+- O contador visível é `aria-hidden`; a mensagem falada vem de `[data-stage-live]`.
+- Botões do pager têm 44 × 44 px, `aria-label` fixo, foco visível e nunca ficam `disabled` no modo circular. O foco permanece no botão após a troca.
+- A ordem de Tab segue a ordem visual: navegação, tema, ações, busca, pager, "Desça para explorar", "Ver montagem", filtros, projetos, Trajetória e contato.
+- Ficha e palette contêm o foco enquanto abertas e devolvem o foco à linha ou à seção ao fechar. `Esc` fecha a camada do topo.
+- A Trajetória usa lista ordenada real, sem `tabindex` e sem `role` artificial; cor não é o único diferenciador.
+- Com movimento reduzido, a troca de prévia não anima, o anúncio continua e a cena não aparece.
+- Sem JS: `.hero-stage`, pager, busca, filtros, tema, cópia de e-mail, fichas e "Ver montagem" ficam ocultos; perfil, projetos, Trajetória, sobre e contato continuam legíveis.
+
+## Responsiveness
+
+| Largura | Herói | Palco | Trajetória |
+|---|---|---|---|
+| 1440 px | duas colunas, nome até 136 px | 432 px de altura, pager sob o esquema | duas colunas |
+| 1024 px | duas colunas, nome ~97 px, sem truncar | palco de 486 px, pager de 44 px | duas colunas |
+| 768 px | uma coluna | palco abaixo do texto, 410 px de altura | uma coluna |
+| 390 px | uma coluna, nome 60 px em uma linha | palco de 520 px, todos os itens, pager completo | uma coluna |
+
+Todos os itens do esquema continuam no DOM em todas as larguras. O índice do item tem coluna de 26 px. Se o espaço apertar, reduz tipografia e padding, nunca remove conteúdo nem cria rolagem interna. A barra de filtros rola na horizontal dentro do próprio contêiner em 390 px, comportamento herdado da v1.0. A altura comum do palco é 520 px até 400 px, 486 px entre 401 e 650 px, 410 px entre 651 e 768 px, 486 px entre 769 e 1439 px e 432 px em 1440 px. O palco lateral do índice segue a mesma regra, com altura própria por faixa, e dá lugar à prévia dentro da linha a partir de 768 px.
+
+## Contracts de URL e navegação
+
+- `?stack=<slug>` filtra o índice; `?stack=` vazio remove o filtro. Voltar e Avançar restauram o estado.
+- `#projeto/<slug>` abre a ficha correspondente; fechar limpa o hash e devolve o foco.
+- `#projeto/projeto-02` canonicaliza para `#projeto/open-mind` com `replaceState`, sem nova entrada no histórico. `projeto-01` e `projeto-03` removem o hash e exibem um aviso em `role="status"`; hash desconhecido é removido em silêncio.
+- A canonicalização vale também quando o hash muda na mesma página, sem recarga. `hashchange` e `popstate` passam por um único sincronizador, que ignora eventos duplicados da mesma navegação e preserva `?stack=`, foco e histórico.
+- O pager do herói não escreve na URL, não cria histórico e não controla o palco do índice.
+- A palette não altera a URL; ao ativar um resultado, rola até a seção ou abre o projeto.
+- O tema persiste em `localStorage`; a URL não carrega tema.
 
 ## Do's and Don'ts
 
-- Fazer: manter dados ausentes como `[A preencher]` e bloquear a publicação até o conteúdo real entrar (checagem `PUBLICAR=1 npm test`).
+- Fazer: manter a checagem `PUBLICAR=1 npm test` verde antes de publicar.
 - Fazer: respeitar movimento reduzido com conteúdo pronto; manter controles operáveis por teclado e foco visível.
 - Fazer: animar apenas `transform` e `opacity`; usar as durações dos tokens.
+- Fazer: descrever o projeto com fatos verificáveis e manter os esquemas dentro do conteúdo permitido.
 - Não fazer: alegar agentes de IA, inventar experiência, projetos, datas, métricas ou links.
 - Não fazer: copiar nome, imagem, textos ou identidade visual da referência analisada.
-- Não fazer: animar propriedades de layout nem criar rolagem horizontal.
+- Não fazer: animar propriedades de layout, criar rolagem horizontal ou deixar controles flutuando sobre conteúdo.

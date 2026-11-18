@@ -1,5 +1,11 @@
 import { projectDetails } from "./data/portfolio.js";
-import { fillProjectDialog, formatValue, getProjectDetails, readRowData } from "./content.js";
+import {
+  OBSOLETE_PROJECT_NOTICE,
+  fillProjectDialog,
+  formatValue,
+  getProjectDetails,
+  readRowData,
+} from "./content.js";
 import {
   CHANGE_FALLBACK_MS,
   SCENE_DURATION_MS,
@@ -12,19 +18,23 @@ import {
   getInitialAgentCount,
   getSceneCursorPoint,
   getSceneLeg,
+  getSchematic,
+  movePreviewIndex,
   moveSelection,
   nextTheme,
   normalizeSlug,
   parseUrlState,
+  previewCountLabel,
   resolveCloseFocus,
+  resolveProjectLocation,
   resolveTheme,
   resultLabel,
   searchItems,
   shouldAnimate,
   shouldForceClose,
+  shouldShowPager,
+  themeToggleLabel,
 } from "./core.js";
-
-const previewLabels = { panel: "Painel", terminal: "Terminal", flow: "Fluxo" };
 
 const page = {
   rows: [],
@@ -44,6 +54,9 @@ const state = {
   timer: null,
   popHandler: null,
   pendingFocus: null,
+  focusOrigin: null,
+  stackOptions: [],
+  appliedUrl: null,
 };
 
 const palette = {
@@ -63,6 +76,10 @@ const paletteKindLabels = { project: "Projeto", stack: "Stack", section: "Seçã
 const THEME_KEY = "portfolio-theme";
 const COPY_FEEDBACK_MS = 2400;
 
+const projectNotice = {
+  region: null,
+};
+
 const contact = {
   button: null,
   status: null,
@@ -80,7 +97,7 @@ const SCENE_LABELS = ["MALHA", "LEITURA", "INTERFACE", "SERVIÇO", "DADOS", "CON
 const SCENE_COLORS = ["var(--mint)", "var(--lime)", "var(--coral)"];
 const SCENE_TARGETS = [
   ".hero-copy h1",
-  ".hero-name",
+  ".hero-facts",
   ".hero-actions",
   ".hero-stage",
   ".filter-bar",
@@ -141,16 +158,65 @@ function readProject(row) {
   };
 }
 
-function renderCanvas(canvas, preview) {
+function renderCanvas(canvas, details) {
+  const preview = details?.preview;
+  const schematic = getSchematic(details, preview);
   canvas.className = `stage-canvas stage-canvas--${preview}`;
+  canvas.setAttribute("aria-hidden", "true");
   canvas.replaceChildren();
 
-  const blocks = preview === "flow" ? 3 : 4;
-  for (let index = 0; index < blocks; index += 1) {
-    const block = document.createElement("i");
-    block.className = "preview-block";
-    canvas.append(block);
+  if (schematic.items.length === 0) {
+    const blocks = preview === "flow" ? 3 : 4;
+    for (let index = 0; index < blocks; index += 1) {
+      const block = document.createElement("i");
+      block.className = "preview-block";
+      canvas.append(block);
+    }
+    return;
   }
+
+  canvas.classList.add("stage-canvas--schematic");
+
+  if (schematic.purpose) {
+    const purpose = document.createElement("p");
+    purpose.className = "preview-purpose";
+    purpose.textContent = schematic.purpose;
+    canvas.append(purpose);
+  }
+
+  const list = document.createElement("ol");
+  list.className = "schematic-list";
+
+  schematic.items.forEach((text, index) => {
+    const entry = document.createElement("li");
+    entry.className = "schematic-item";
+
+    const number = document.createElement("span");
+    number.className = "schematic-index";
+    number.textContent = String(index + 1).padStart(2, "0");
+
+    const label = document.createElement("span");
+    label.className = "schematic-text";
+    label.textContent = text;
+
+    entry.append(number, label);
+    list.append(entry);
+  });
+
+  canvas.append(list);
+}
+
+function ensureStageNote(stage) {
+  const chrome = stage?.querySelector(".stage-chrome");
+  if (!chrome) return null;
+
+  let note = chrome.querySelector(".stage-note");
+  if (!note) {
+    note = document.createElement("span");
+    note.className = "stage-note";
+    chrome.append(note);
+  }
+  return note;
 }
 
 function restartSwap(element) {
@@ -160,20 +226,68 @@ function restartSwap(element) {
 }
 
 function paintStage(stage, { data, details, slug }) {
+  const schematic = getSchematic(details, details.preview);
+  const note = ensureStageNote(stage);
+  stage.classList.toggle("has-schematic", schematic.items.length > 0);
   stage.querySelector("[data-preview-title]").textContent = data.title;
-  stage.querySelector("[data-preview-kind]").textContent = previewLabels[details.preview];
+  stage.querySelector("[data-preview-kind]").textContent = schematic.label;
+  if (note) note.textContent = schematic.note;
   stage.querySelector("[data-preview-stack]").textContent = formatValue(data.stacks);
-  renderCanvas(stage.querySelector("[data-preview-canvas]"), details.preview);
+  renderCanvas(stage.querySelector("[data-preview-canvas]"), details);
   stage.dataset.slug = slug;
   restartSwap(stage);
 }
 
 function clearStage(stage) {
+  const note = stage.querySelector(".stage-note");
+  stage.classList.remove("has-schematic");
   stage.querySelector("[data-preview-title]").textContent = "";
   stage.querySelector("[data-preview-kind]").textContent = "";
+  if (note) note.textContent = "";
   stage.querySelector("[data-preview-stack]").textContent = "";
   stage.querySelector("[data-preview-canvas]").replaceChildren();
   delete stage.dataset.slug;
+}
+
+function initHeroPreview(stage, entries) {
+  if (!stage) return;
+
+  const pager = stage.querySelector("[data-stage-pager]");
+  const live = stage.querySelector("[data-stage-live]");
+  const count = stage.querySelector("[data-stage-count]");
+
+  if (!entries.length) {
+    clearStage(stage);
+    pager?.remove();
+    live?.remove();
+    return;
+  }
+
+  const featured = findFeaturedSlug(page.rows);
+  let index = entries.findIndex((entry) => entry.slug === featured);
+  if (index < 0) index = 0;
+
+  const paint = () => {
+    paintStage(stage, entries[index]);
+    if (count) count.textContent = previewCountLabel(index, entries.length);
+  };
+
+  paint();
+
+  if (!shouldShowPager(entries.length)) {
+    pager?.remove();
+    live?.remove();
+    return;
+  }
+
+  const step = (delta) => {
+    index = movePreviewIndex(index, delta, entries.length);
+    paint();
+    if (live) live.textContent = `${entries[index].data.title}, prévia ${index + 1} de ${entries.length}`;
+  };
+
+  stage.querySelector("[data-stage-prev]")?.addEventListener("click", () => step(-1));
+  stage.querySelector("[data-stage-next]")?.addEventListener("click", () => step(1));
 }
 
 function ensureRowPreview(box) {
@@ -185,10 +299,14 @@ function ensureRowPreview(box) {
     kind.className = "row-preview-kind";
     kind.dataset.previewKind = "";
 
+    const note = document.createElement("span");
+    note.className = "row-preview-note";
+    note.dataset.previewNote = "";
+
     const stack = document.createElement("span");
     stack.dataset.previewStack = "";
 
-    head.append(kind, stack);
+    head.append(kind, note, stack);
     box.append(head);
   }
   return box;
@@ -202,7 +320,11 @@ function createRowPreview() {
 }
 
 function paintRowPreview(box, { data, details }) {
-  box.querySelector("[data-preview-kind]").textContent = previewLabels[details.preview];
+  const schematic = getSchematic(details, details.preview);
+  box.classList.toggle("has-schematic", schematic.items.length > 0);
+  box.querySelector("[data-preview-kind]").textContent = schematic.label;
+  const note = box.querySelector("[data-preview-note]");
+  if (note) note.textContent = schematic.note;
   box.querySelector("[data-preview-stack]").textContent = formatValue(data.stacks);
 
   let canvas = box.querySelector(".stage-canvas");
@@ -210,7 +332,7 @@ function paintRowPreview(box, { data, details }) {
     canvas = document.createElement("div");
     box.append(canvas);
   }
-  renderCanvas(canvas, details.preview);
+  renderCanvas(canvas, details);
   restartSwap(box);
 }
 
@@ -246,14 +368,35 @@ function focusSection(preventScroll = true) {
   if (title) title.focus({ preventScroll });
 }
 
+function isAvailableOrigin(origin) {
+  return Boolean(
+    origin &&
+      origin.isConnected &&
+      origin.disabled !== true &&
+      typeof origin.focus === "function" &&
+      origin.getClientRects().length > 0,
+  );
+}
+
 function restoreFocus(slug, intent) {
+  const recorded = state.focusOrigin;
+  state.focusOrigin = null;
+  const origin = recorded && recorded.slug === slug ? recorded.element : null;
+
   if (intent === "section") {
     focusSection();
     return;
   }
 
   const entry = slug ? page.bySlug.get(slug) : null;
-  const decision = resolveCloseFocus({ rowVisible: Boolean(entry && !entry.row.hidden) });
+  const decision = resolveCloseFocus({
+    originAvailable: isAvailableOrigin(origin),
+    rowVisible: Boolean(entry && !entry.row.hidden),
+  });
+  if (decision.target === "origin") {
+    origin.focus({ preventScroll: true });
+    return;
+  }
   if (decision.target === "row" && entry) {
     entry.row.focus({ preventScroll: true });
     return;
@@ -324,7 +467,7 @@ function forceClose(slug) {
   const current = `${location.pathname}${location.search}${location.hash}`;
   if (next !== current) history.replaceState(null, "", next);
 
-  applyUrlState(parseUrlState(location));
+  applyLocationState();
 }
 
 function scheduleFallback(slug) {
@@ -350,10 +493,16 @@ function requestClose() {
   const urlState = parseUrlState(location);
   const next = buildUrl({ pathname: location.pathname, stack: urlState.stack, project: null });
   history.replaceState(null, "", next);
-  applyUrlState(parseUrlState(location));
+  applyLocationState();
 }
 
-function applyUrlState(urlState) {
+function setProjectNotice(message) {
+  if (!projectNotice.region) return;
+  projectNotice.region.textContent = message;
+  projectNotice.region.hidden = !message;
+}
+
+function applyUrlState(urlState, { obsoleteProject = false } = {}) {
   const stack = urlState?.stack ?? null;
   const visible = filterProjects(page.entries, stack);
   const visibleSlugs = new Set(visible.map((entry) => entry.slug));
@@ -375,16 +524,18 @@ function applyUrlState(urlState) {
 
   const project = urlState?.project && page.bySlug.has(urlState.project) ? urlState.project : null;
   syncDialog(project);
+  setProjectNotice(obsoleteProject ? OBSOLETE_PROJECT_NOTICE : "");
 }
 
-function openFromRow(row) {
+function openFromRow(row, origin = null) {
   const slug = row.dataset.projectSlug;
+  state.focusOrigin = origin ? { element: origin, slug } : null;
   const urlState = parseUrlState(location);
   const next = buildUrl({ pathname: location.pathname, stack: urlState.stack, project: slug });
   const current = `${location.pathname}${location.search}${location.hash}`;
 
   if (next !== current) history.pushState({ dialog: slug }, "", next);
-  applyUrlState(parseUrlState(location));
+  applyLocationState();
 }
 
 function pushFilter(stack) {
@@ -393,20 +544,45 @@ function pushFilter(stack) {
   const current = `${location.pathname}${location.search}${location.hash}`;
 
   if (next !== current) history.pushState(history.state, "", next);
-  applyUrlState(parseUrlState(location));
+  applyLocationState();
+}
+
+function currentUrl() {
+  return `${location.pathname}${location.search}${location.hash}`;
+}
+
+function applyLocationState({ obsoleteProject = false } = {}) {
+  applyUrlState(parseUrlState(location), { obsoleteProject });
+  state.appliedUrl = currentUrl();
+}
+
+function syncFromLocation() {
+  if (currentUrl() === state.appliedUrl) return;
+
+  if (!location.hash.startsWith("#projeto/")) {
+    applyLocationState();
+    return;
+  }
+
+  const { projectObsolete } = canonicalize(state.stackOptions);
+  applyLocationState({ obsoleteProject: projectObsolete });
 }
 
 function canonicalize(options) {
-  const urlState = parseUrlState(location);
-  const hadHash = location.hash !== "";
-  const knownStack = urlState.stack && options.some((option) => option.slug === urlState.stack);
-  const knownProject = urlState.project && page.bySlug.has(urlState.project) ? urlState.project : null;
-  const next = { stack: knownStack ? urlState.stack : null, project: knownProject };
-  const canonical = buildUrl({ pathname: location.pathname, ...next });
-  const current = `${location.pathname}${location.search}${location.hash}`;
+  const resolution = resolveProjectLocation({
+    pathname: location.pathname,
+    search: location.search,
+    hash: location.hash,
+    projectSlugs: page.entries.map((entry) => entry.slug),
+    stackSlugs: options.map((option) => option.slug),
+  });
+  const current = currentUrl();
 
-  if (canonical !== current) history.replaceState(history.state, "", canonical);
-  return { projectRemoved: hadHash && !knownProject };
+  if (resolution.canonical !== current) history.replaceState(history.state, "", resolution.canonical);
+  return {
+    projectRemoved: resolution.projectRemoved,
+    projectObsolete: resolution.projectObsolete,
+  };
 }
 
 function buildFilter(options) {
@@ -441,7 +617,8 @@ function bindFilters() {
     page.bar?.querySelector('[data-stack=""]')?.focus();
   });
 
-  addEventListener("popstate", () => applyUrlState(parseUrlState(location)));
+  addEventListener("popstate", syncFromLocation);
+  addEventListener("hashchange", syncFromLocation);
 }
 
 function bindDialog() {
@@ -476,7 +653,7 @@ function bindProjectOpening() {
     const button = event.target.closest(".project-open");
     if (!button || !list.contains(button)) return;
     const row = button.closest("[data-project-slug]");
-    if (row) openFromRow(row);
+    if (row) openFromRow(row, button);
   });
 }
 
@@ -606,6 +783,7 @@ function openPalette({ query = "", opener = null } = {}) {
   if (!dialog || dialog.open || page.dialog?.open) return;
 
   palette.opener = opener instanceof HTMLElement && opener !== document.body ? opener : null;
+  setProjectNotice("");
   lockScroll();
   dialog.showModal();
   palette.input.value = query;
@@ -759,7 +937,10 @@ function systemTheme() {
 }
 
 function syncThemeControls() {
-  theme.toggle?.setAttribute("aria-pressed", String(theme.current === "paper"));
+  const label = theme.toggle?.querySelector("[data-theme-label]");
+  if (label) label.textContent = themeToggleLabel(theme.current);
+  theme.toggle?.removeAttribute("aria-pressed");
+  theme.toggle?.removeAttribute("aria-label");
 
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute("content", theme.current === "paper" ? "#f1f0e8" : "#0b1d27");
@@ -1039,9 +1220,11 @@ function boot() {
 
     page.entries = page.rows.map(readProject);
     page.bySlug = new Map(page.entries.map((entry) => [entry.slug, entry]));
+    projectNotice.region = document.querySelector("#project-notice");
     const options = collectStackOptions(page.entries);
+    state.stackOptions = options;
 
-    const { projectRemoved } = canonicalize(options);
+    const { projectRemoved, projectObsolete } = canonicalize(options);
 
     buildFilter(options);
     bindFilters();
@@ -1053,16 +1236,12 @@ function boot() {
     initRowPreviews(page.rows);
 
     const heroStage = document.querySelector("[data-preview-stage]");
-    if (heroStage) {
-      const featured = findFeaturedSlug(page.rows);
-      const row = page.rows.find((item) => item.dataset.projectSlug === featured) ?? page.rows[0];
-      paintStage(heroStage, readProject(row));
-    }
+    if (heroStage) initHeroPreview(heroStage, page.entries);
 
     page.indexStage = document.querySelector("[data-index-stage]");
     if (page.indexStage) bindIndexPreview(page.rows, page.indexStage);
 
-    applyUrlState(parseUrlState(location));
+    applyLocationState({ obsoleteProject: projectObsolete });
     if (projectRemoved) focusSection(false);
   } catch (error) {
     console.error("Falha ao iniciar o portfólio:", error);
