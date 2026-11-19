@@ -20,7 +20,7 @@ Apresentar o perfil, os projetos e a trajetória de Nicolas Ponciano para apoiar
 
 ## Positioning
 
-Portfólio técnico editorial, de página única, que mostra o trabalho antes de qualquer efeito. A credibilidade vem do conteúdo verificável: três projetos reais com papel, desafio e solução, prévias conceituais derivadas das funcionalidades de cada projeto e a trajetória profissional e acadêmica. A montagem por cursores existe como demonstração opt-in, não como a experiência principal nem como agentes de IA.
+Portfólio técnico editorial, de página única, que mostra o trabalho antes de qualquer efeito. A credibilidade vem do conteúdo verificável: três projetos reais com papel, desafio e solução, prévias conceituais derivadas das funcionalidades de cada projeto e a trajetória profissional e acadêmica.
 
 ## Operating Context
 
@@ -34,7 +34,6 @@ Site publicado em https://nicolasponciano.github.io/, navegado por rolagem e ân
 - Índice com filtro por tecnologia em `?stack=`, contagem `N de M`, prévia por hover e foco e ficha aberta por `#projeto/<slug>`.
 - Trajetória com três experiências e três formações, sem métricas ou resultados inventados.
 - Temas tinta e papel, persistidos em `localStorage`, e palette por `Ctrl+K`.
-- Cena opcional de montagem por 6 cursores no desktop e 4 em telas compactas, com duração de 6 a 8 segundos e parada na primeira interação.
 - Sem backend, autenticação, chamadas a modelos, analytics ou armazenamento remoto.
 - Fontes e ícones locais; nenhuma dependência de execução ou de build.
 
@@ -42,7 +41,6 @@ Site publicado em https://nicolasponciano.github.io/, navegado por rolagem e ân
 
 - Identidade própria, sem reutilizar nome, imagem, textos, projetos, contatos ou identidade visual de referências analisadas.
 - Vocabulário visual de caderno técnico: tinta azul-petróleo, papel claro, turquesa, lima e coral, cantos retos e hairlines.
-- Os cursores da cena são animação local, nunca apresentados como agentes de IA.
 
 ## Evidence on Hand
 

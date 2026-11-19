@@ -1708,145 +1708,6 @@ h2 {
   gap: 8px;
 }
 
-.agent-layer {
-  position: fixed;
-  z-index: 30;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.scene-button {
-  display: inline-flex;
-  flex: none;
-  min-height: 44px;
-  align-items: center;
-  gap: 10px;
-  padding: 0 16px;
-  border: 1px solid var(--line-strong);
-  background: var(--ink-raised);
-  color: var(--paper);
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 700;
-  transition: background-color var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out), transform var(--dur-1) var(--ease-out);
-}
-
-.scene-button[hidden] {
-  display: none;
-}
-
-.scene-button svg {
-  width: 16px;
-  height: 16px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linejoin: round;
-  stroke-width: 1.3;
-}
-
-.scene-button:hover {
-  background: var(--lime);
-  color: var(--on-accent);
-}
-
-.scene-button:active {
-  transform: scale(0.98);
-}
-
-.agent-cursor {
-  position: fixed;
-  top: 0;
-  left: 0;
-  display: flex;
-  align-items: flex-start;
-  transform: translate3d(-60px, -60px, 0);
-  will-change: transform;
-}
-
-.agent-cursor svg {
-  width: 18px;
-  height: 20px;
-  overflow: visible;
-  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6));
-}
-
-.agent-cursor path {
-  fill: var(--agent-color);
-  stroke: var(--paper);
-  stroke-linejoin: round;
-  stroke-width: 1.25;
-}
-
-.agent-label {
-  margin: 13px 0 0 2px;
-  padding: 2px 7px;
-  background: var(--agent-color);
-  color: var(--on-accent);
-  font-size: 9px;
-  font-weight: 700;
-  line-height: 1.5;
-  opacity: 0;
-  transform: translateY(4px);
-  transition: opacity var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out);
-  white-space: nowrap;
-}
-
-.agent-cursor.is-active .agent-label {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.build-selection {
-  position: fixed;
-  top: 0;
-  left: 0;
-  border: 1px solid var(--agent-color);
-  background: transparent;
-  opacity: 0;
-  pointer-events: none;
-  transform: translate3d(-40px, -40px, 0);
-  transition: opacity var(--dur-2) var(--ease-out);
-}
-
-.build-selection.is-active {
-  opacity: 1;
-}
-
-.build-measure {
-  position: absolute;
-  right: -1px;
-  bottom: -19px;
-  padding: 1px 6px;
-  background: var(--agent-color);
-  color: var(--on-accent);
-  font-size: 9px;
-  font-weight: 700;
-  line-height: 1.5;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-}
-
-.build-skeleton {
-  position: fixed;
-  top: 0;
-  left: 0;
-  border: 1px solid rgba(221, 236, 229, 0.14);
-  background:
-    linear-gradient(90deg, rgba(241, 240, 232, 0.035), rgba(241, 240, 232, 0.09), rgba(241, 240, 232, 0.035)),
-    var(--ink-raised);
-}
-
-.neon-char {
-  opacity: 0.22;
-  transition: opacity var(--dur-2) var(--ease-out), text-shadow var(--dur-2) var(--ease-out);
-}
-
-.neon-char.is-lit {
-  opacity: 1;
-  text-shadow: 0 0 14px color-mix(in srgb, var(--lime) 65%, transparent);
-}
-
 .sr-only {
   position: absolute;
   width: 1px;
@@ -2303,8 +2164,7 @@ html.no-js .filter-bar,
 html.no-js .filter-count,
 html.no-js #theme-toggle,
 html.no-js #copy-email,
-html.no-js .project-open,
-html.no-js #scene-button {
+html.no-js .project-open {
   display: none;
 }
 
@@ -2321,7 +2181,7 @@ html.motion-reduced *::after {
   transition-duration: 0.01ms !important;
 }
 
-html.motion-reduced :is(.theme-toggle, .button, .filter-tag, .filter-clear, .project-open, .dialog-close, .dialog-links a, .scene-button, .copy-email, .stage-button):active {
+html.motion-reduced :is(.theme-toggle, .button, .filter-tag, .filter-clear, .project-open, .dialog-close, .dialog-links a, .copy-email, .stage-button):active {
   transform: none;
 }
 
@@ -2649,7 +2509,7 @@ html.motion-reduced :is(.theme-toggle, .button, .filter-tag, .filter-clear, .pro
     transition-duration: 0.01ms !important;
   }
 
-  :is(.theme-toggle, .button, .filter-tag, .filter-clear, .project-open, .dialog-close, .dialog-links a, .scene-button, .copy-email, .stage-button):active {
+  :is(.theme-toggle, .button, .filter-tag, .filter-clear, .project-open, .dialog-close, .dialog-links a, .copy-email, .stage-button):active {
     transform: none;
   }
 }

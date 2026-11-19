@@ -106,7 +106,7 @@ test("o índice estrutura linhas com título, ano, stack, abrir e palco", () => 
   assert.match(html, /data-index-stage[^>]*aria-hidden="true"/);
   assert.match(html, /class="hero-search" role="search"[^>]*aria-label="Busca do portfólio"/, "a busca do hero fica ativa com a palette");
   assert.doesNotMatch(html, /class="hero-search"[^>]*\shidden\b/, "a busca não pode continuar oculta");
-  assert.doesNotMatch(html, /data-build|data-reveal/, "não restam ganchos da montagem antiga");
+  assert.doesNotMatch(html, /data-build|data-reveal/, "não restam ganchos de revelação antigos");
 });
 
 test("o selo das prévias vem do contrato de dados, não de um texto fixo no HTML", () => {
@@ -125,18 +125,6 @@ test("o selo das prévias vem do contrato de dados, não de um texto fixo no HTM
   assert.match(app, /\[data-preview-note\]/, "a prévia compacta usa o mesmo selo");
 });
 
-test("o controle da montagem fica no rodapé do hero, antes do fim da seção", () => {
-  const html = readFileSync(pagePath, "utf8");
-  const heroStart = html.indexOf('<section class="hero');
-  const heroEnd = html.indexOf("</section>", heroStart);
-  const foot = html.indexOf('class="hero-foot"', heroStart);
-  const button = html.indexOf('id="scene-button"', heroStart);
-
-  assert.ok(heroStart !== -1 && heroEnd !== -1, "seção do hero precisa existir");
-  assert.ok(foot !== -1 && button !== -1, "o hero precisa do rodapé e do botão de montagem");
-  assert.ok(foot < button && button < heroEnd, "o botão de montagem vive dentro do rodapé do hero");
-  assert.equal(html.split('id="scene-button"').length - 1, 1, "existe um único controle de montagem");
-});
 
 test("a barra de filtro tem tag inicial, contagem anunciada e estado vazio", () => {
   const html = readFileSync(pagePath, "utf8");

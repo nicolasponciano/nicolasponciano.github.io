@@ -36,7 +36,7 @@ function mediaRanges(css, selector) {
   return ranges;
 }
 
-test("nenhuma regra oculta conteúdo por estado de montagem", () => {
+test("nenhuma regra oculta conteúdo por estado de construção", () => {
   const css = readCss();
   assert.doesNotMatch(css, /page-building/);
   assert.doesNotMatch(css, /\[data-build\][^{}]*\{[^}]*opacity:\s*0/);
@@ -79,7 +79,6 @@ test("sem JavaScript os controles mortos ficam ocultos", () => {
     "#theme-toggle",
     "#copy-email",
     ".project-open",
-    "#scene-button",
   ]) {
     assert.ok(block.includes(selector), `html.no-js precisa ocultar ${selector}`);
   }
@@ -114,22 +113,6 @@ test("a linha de projeto empilha os metadados antes de 1440 px", () => {
   assert.match(block, /\.project-meta\s*{[^}]*grid-column:\s*2/);
 });
 
-test("o botão de montagem fica no rodapé do hero e não flutua sobre o conteúdo", () => {
-  const css = readCss();
-  const button = readRule(css, ".scene-button {");
-  assert.doesNotMatch(button, /position:\s*fixed/, "o botão não pode flutuar sobre o conteúdo");
-  assert.match(button, /min-height:\s*44px/);
-  assert.match(button, /align-items:\s*center/);
-
-  const foot = readRule(css, ".hero-foot {");
-  assert.match(foot, /flex-wrap:\s*wrap/);
-  assert.match(css, /\.hero-foot-actions\s*{[^}]*display:\s*flex/);
-
-  const ranges = mediaRanges(css, "@media (max-width: 720px)");
-  assert.ok(ranges.length > 0, "o breakpoint de 720 px precisa existir");
-  const block = ranges.map(([open, close]) => css.slice(open, close)).join("\n");
-  assert.match(block, /\.hero-foot\s*{[^}]*position:\s*static/, "no mobile o rodapé entra no fluxo do hero");
-});
 
 test("o nome domina o hero com kicker, resumo e linha de fatos", () => {
   const css = readCss();
@@ -438,13 +421,6 @@ test("as tags de filtro respeitam alvo de 44 px e o estado vazio fica oculto", (
   assert.match(css, /\.project-notice\[hidden\]\s*{\s*display:\s*none/, "o aviso não pode aparecer vazio");
   assert.match(css, /\.project-notice\s*{[^}]*color:\s*var\(--paper-dim\)/);
   assert.match(css, /\.filter-bar\s*{[^}]*overscroll-behavior-x:\s*contain/);
-});
-
-test("o botão de montagem é um controle único, oculto até a cena existir", () => {
-  const html = readFileSync(fileURLToPath(new URL("../index.html", import.meta.url)), "utf8");
-  assert.match(html, /id="scene-button"[^>]*hidden/);
-  assert.match(html, /Ver montagem/);
-  assert.doesNotMatch(html, /id="build-controls"/);
 });
 
 test("as durações de movimento vêm de um único conjunto de tokens", () => {

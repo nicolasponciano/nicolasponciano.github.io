@@ -15,13 +15,13 @@ Página única de portfólio pessoal full stack, publicada em https://nicolaspon
 
 ## Direction contract
 
-THESIS: a página é uma mesa técnica editorial que se deixa inspecionar; o herói identifica a pessoa, as prévias mostram o que cada projeto faz, o índice abre fichas, o filtro compartilha estado pela URL e a montagem por cursores existe como demonstração opt-in, não como pedágio de leitura.
+THESIS: a página é uma mesa técnica editorial que se deixa inspecionar; o herói identifica a pessoa, as prévias mostram o que cada projeto faz, o índice abre fichas, o filtro compartilha estado pela URL.
 
 OWN-WORLD: caderno técnico de alto contraste, fundo azul-petróleo profundo (#0B1D27), papel claro (#F1F0E8), texto tinta (#0B1D27), acentos turquesa (#55D6BE), amarelo-lima (#D7EF70) e coral (#FF896F). Tipografia de display condensada e sans de leitura, com mono apenas em metadados. Cantos retos, hairlines de 1 px, folhas claras sobre a tinta. Cursores multicoloridos próprios; não copiar retrato, marca, texto nem nomes da referência.
 
-STORY: a pessoa vê primeiro o nome e o papel, entende que é um portfólio full stack, examina as prévias conceituais dos três projetos, filtra por stack, abre a ficha, percorre a Trajetória, encontra o contato e pode assistir à montagem se quiser.
+STORY: a pessoa vê primeiro o nome e o papel, entende que é um portfólio full stack, examina as prévias conceituais dos três projetos, filtra por stack, abre a ficha, percorre a Trajetória, encontra o contato.
 
-FIRST VIEWPORT: navegação curta no topo com marca, Projetos, Sobre, Contato e botão de tema; herói em duas colunas. Na coluna de cópia, nesta ordem: kicker "Desenvolvedor de Software Full Stack", `h1` "Nicolas Ponciano" dominante, resumo, três fatos verificáveis, duas ações e busca que abre a palette. Na coluna direita, palco de prévia do projeto em destaque, com título, tipo, nota "Prévia conceitual", propósito, quatro capacidades numeradas, stack e pager de anterior/próximo com contador. No rodapé do herói, "Interfaces, serviços e dados", link "Desça para explorar" e o botão "Ver montagem" no fluxo, sem flutuar. A primeira seção de projetos começa abaixo da dobra.
+FIRST VIEWPORT: navegação curta no topo com marca, Projetos, Sobre, Contato e botão de tema; herói em duas colunas. Na coluna de cópia, nesta ordem: kicker "Desenvolvedor de Software Full Stack", `h1` "Nicolas Ponciano" dominante, resumo, três fatos verificáveis, duas ações e busca que abre a palette. Na coluna direita, palco de prévia do projeto em destaque, com título, tipo, nota "Prévia conceitual", propósito, quatro capacidades numeradas, stack e pager de anterior/próximo com contador. No rodapé do herói, "Interfaces, serviços e dados", link "Desça para explorar". A primeira seção de projetos começa abaixo da dobra.
 
 ## States and surfaces
 
@@ -32,8 +32,8 @@ FIRST VIEWPORT: navegação curta no topo com marca, Projetos, Sobre, Contato e 
 - Palette: `<dialog>` com `role="listbox"`, `Ctrl+K`/`⌘+K`, busca sem caixa e sem acento, setas, Home, End, Enter e Esc; bloqueada com a ficha aberta.
 - Trajetória: `#trajetoria` entre Projetos e Sobre, com Experiência e Formação em listas ordenadas; período, cargo/curso e organização em texto; a pós-graduação indica "em andamento".
 - Temas: tinta (padrão do sistema escuro) e papel, persistidos em `localStorage`; ficha e palette sempre claras.
-- Movimento reduzido: troca de prévia instantânea, sem animação de entrada; a cena de montagem não é oferecida.
-- Sem JS: busca, filtro, contagem, tema, copiar, "Abrir", prévias do herói, do índice e da linha e "Ver montagem" ocultos; perfil, projetos com ano/stack, Trajetória, sobre e contato com `mailto:` continuam legíveis; o tema segue `prefers-color-scheme`.
+- Movimento reduzido: troca de prévia instantânea, sem animação de entrada.
+- Sem JS: busca, filtro, contagem, tema, copiar, "Abrir", prévias do herói, do índice e da linha ocultos; perfil, projetos com ano/stack, Trajetória, sobre e contato com `mailto:` continuam legíveis; o tema segue `prefers-color-scheme`.
 
 FORM: direção de interação definida pelo usuário na spec aprovada. Code-first aprovado. Sem concept-seed porque a direção foi explicitamente escolhida; a referência REA serve como evidência do mecanismo de cursores, não como material a copiar. FINISH: revisão de acabamento e medições de 2026-11-17 registradas em `specs/portfolio-interativo/verificacao.md` (v1.0) e `specs/portfolio-v1-1/` (v1.1).
 

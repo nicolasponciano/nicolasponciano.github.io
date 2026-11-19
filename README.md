@@ -4,7 +4,7 @@ Site publicado em **https://nicolasponciano.github.io/**
 
 Portfólio de Nicolas Ponciano, desenvolvedor de software full stack. A página apresenta o perfil, três projetos reais com papel, desafio e solução, a trajetória profissional e acadêmica e os canais de contato.
 
-É uma página única, estática, em HTML, CSS e JavaScript, sem framework, sem etapa de build e sem backend. O conteúdo aparece na primeira renderização; o JavaScript adiciona prévias, filtros, fichas, busca por comando e a cena opcional de montagem.
+É uma página única, estática, em HTML, CSS e JavaScript, sem framework, sem etapa de build e sem backend. O conteúdo aparece na primeira renderização; o JavaScript adiciona prévias, filtros, fichas, busca por comando e pager.
 
 ## Funcionalidades
 
@@ -18,7 +18,7 @@ Portfólio de Nicolas Ponciano, desenvolvedor de software full stack. A página 
 - **Palette**: busca por comando em `Ctrl+K` (`⌘+K`), sem diferenciar caixa ou acento, com navegação por setas, Home, End, Enter e Esc.
 - **Temas tinta e papel**: alternância manual persistida em `localStorage`, com `prefers-color-scheme` como padrão.
 - **Trajetória**: três experiências e três formações, extraídas do currículo, em lista ordenada.
-- **Cena opcional de montagem**: botão único no rodapé do herói que inicia uma demonstração de 6 a 8 segundos por cursores locais; não bloqueia a leitura e para na primeira interação.
+
 - **Acessibilidade**: operação por teclado, foco visível, foco contido nas fichas e palette, alvos de 44 px, contraste mínimo de 4,5:1 e respeito a `prefers-reduced-motion`.
 - **Fallback sem JavaScript**: perfil, projetos, trajetória, sobre e contato continuam legíveis; busca, filtros, tema, cópia de e-mail, fichas e cena ficam ocultos.
 
@@ -123,4 +123,4 @@ O esquema usa no máximo quatro itens, com `label`, `note`, `purpose` e `items`.
 - Contraste mínimo medido na página: 6,61:1 no tema tinta (nota do contato) e 5,53:1 no tema papel (nota e rodapé do palco, contador do pager). Dentro das prévias conceituais, o menor par é o selo, com 7,13:1 no tinta e 5,53:1 no papel.
 - Ordem de foco segue a ordem visual; todos os controles têm foco visível.
 - Fichas e palette contêm o foco enquanto abertas e devolvem o foco ao fechar.
-- Com movimento reduzido, a troca de prévia é instantânea e a cena de montagem não é oferecida.
+- Com movimento reduzido, a troca de prévia é instantânea.

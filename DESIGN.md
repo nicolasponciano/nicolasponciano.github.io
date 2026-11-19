@@ -66,12 +66,6 @@ components:
     textColor: "{colors.paper}"
     rounded: "0px"
     padding: "25px 8px 25px 0"
-  scene-button:
-    backgroundColor: "{colors.ink-raised}"
-    textColor: "{colors.paper}"
-    rounded: "0px"
-    padding: "0 16px"
-    height: "44px"
   project-sheet:
     backgroundColor: "{colors.sheet}"
     textColor: "{colors.sheet-ink}"
@@ -80,7 +74,7 @@ components:
 
 ## Overview
 
-Portfólio de página única para candidaturas full stack, publicado como mesa técnica editorial. O conteúdo aparece inteiro na primeira renderização: herói com nome dominante e palco de prévia, índice de trabalho com filtro por stack, seção Trajetória, ficha de projeto em `<dialog>` e busca por comando. As prévias são esquemas derivados das funcionalidades reais de cada projeto, não composições genéricas. A montagem por cursores é uma cena opcional de 6 a 8 s, acionada por um botão no rodapé do herói, sobre conteúdo já visível.
+Portfólio de página única para candidaturas full stack, publicado como mesa técnica editorial. O conteúdo aparece inteiro na primeira renderização: herói com nome dominante e palco de prévia, índice de trabalho com filtro por stack, seção Trajetória, ficha de projeto em `<dialog>` e busca por comando. As prévias são esquemas derivados das funcionalidades reais de cada projeto, não composições genéricas.
 
 ## Colors
 
@@ -106,7 +100,7 @@ Ordem de leitura do herói:
 4. `ul.hero-facts`: três fatos verificáveis, em três colunas com hairlines; uma coluna abaixo de 720 px.
 5. `.hero-actions`: "Explorar projetos" e "Entrar em contato".
 6. `.hero-search`: campo que abre a palette.
-7. `.hero-foot`: "Interfaces, serviços e dados", link "Desça para explorar" e o botão "Ver montagem".
+7. `.hero-foot`: "Interfaces, serviços e dados", link "Desça para explorar".
 
 Índice de trabalho em duas colunas: lista e palco fixo. O palco fica com 40% da largura até 1024 px e some em 768 px ou menos, quando a prévia passa para dentro da linha. A linha de projeto usa quatro colunas (índice, título e resumo, metadados, ações) somente a partir de 1440 px; abaixo disso os metadados empilham sob o título, mantendo a coluna de texto legível entre 1200 e 1439 px. Abaixo de 720 px as ações vão para a linha seguinte.
 
@@ -116,7 +110,7 @@ Ficha e palette ocupam a tela cheia abaixo de 480 px, com o fechar sempre visív
 
 ## Elevation & Depth
 
-Não há sombras decorativas. Profundidade vem de planos de cor (`ink`, `ink-raised`), hairlines de 1 px, do backdrop das folhas e da sobreposição explícita entre cursores, seleção e esqueleto durante a cena. O botão "Ver montagem" fica no fluxo do `.hero-foot`, sem posicionamento fixo e sem cobrir conteúdo; abaixo de 720 px o rodapé do herói passa a `position: static`.
+Não há sombras decorativas. Profundidade vem de planos de cor (`ink`, `ink-raised`), hairlines de 1 px e do backdrop das folhas.
 
 ## Shapes
 
@@ -136,22 +130,22 @@ Cantos retos em todos os elementos: botões, campos, linhas, folhas e controles.
 - **Trajetória**: `#trajetoria` entre Projetos e Sobre, com dois grupos (`h3` Experiência e Formação) e listas ordenadas. Cada item mostra período, cargo ou curso e organização; a pós-graduação leva a nota "em andamento". Não entra na navegação do cabeçalho e entra na palette por `data-section-label`.
 - **Botão de tema**: rótulo de ação, "Ativar tema papel" no tema tinta e "Ativar tema tinta" no papel, sem `aria-pressed`; o nome acessível é o próprio texto e a persistência continua local.
 - **Contato**: `mailto:` visível e botão que copia o endereço com confirmação em `aria-live`.
-- **"Ver montagem"**: botão único dentro de `.hero-foot-actions`, oculto sem JS e com movimento reduzido; a cena usa 6 cursores no desktop e 4 em telas compactas, nunca oculta conteúdo e para na primeira interação.
+- **Acessibilidade**: operação por teclado, foco visível, foco contido nas fichas e palette, alvos de 44 px, contraste mínimo de 4,5:1 e respeito a `prefers-reduced-motion`.
 
 ## Motion
 
-Tokens únicos em `:root`: `--dur-1` 120 ms (hover, press, cor), `--dur-2` 160 ms (troca de prévia, foco), `--dur-3` 200 ms (entrada da palette), `--dur-4` 240 ms (entrada da ficha). Só `transform` e `opacity` movem; cor, borda e fundo podem transicionar. Press usa `scale(0.98)` nos botões, no pager e no botão de montagem; o link textual "Entrar em contato" responde ao press apenas com cor, sem deslocar a linha. Com `prefers-reduced-motion: reduce`, durações caem para `0.00001s`, `transform` é removido e a cena não é oferecida. Nenhuma transição anima `width`, `height`, `top`, `left`, `margin`, `padding`, `gap` ou `all`.
+Tokens únicos em `:root`: `--dur-1` 120 ms (hover, press, cor), `--dur-2` 160 ms (troca de prévia, foco), `--dur-3` 200 ms (entrada da palette), `--dur-4` 240 ms (entrada da ficha). Só `transform` e `opacity` movem; cor, borda e fundo podem transicionar. Press usa `scale(0.98)` nos botões e no pager; o link textual "Entrar em contato" responde ao press apenas com cor, sem deslocar a linha. Com `prefers-reduced-motion: reduce`, durações caem para `0.00001s` e `transform` é removido. Nenhuma transição anima `width`, `height`, `top`, `left`, `margin`, `padding`, `gap` ou `all`.
 
 ## Accessibility
 
 - O palco do herói é `role="group"` com nome acessível "Prévia de projetos"; chrome, canvas e rodapé são `aria-hidden`, e o pager é a única parte focável.
 - O contador visível é `aria-hidden`; a mensagem falada vem de `[data-stage-live]`.
 - Botões do pager têm 44 × 44 px, `aria-label` fixo, foco visível e nunca ficam `disabled` no modo circular. O foco permanece no botão após a troca.
-- A ordem de Tab segue a ordem visual: navegação, tema, ações, busca, pager, "Desça para explorar", "Ver montagem", filtros, projetos, Trajetória e contato.
+- A ordem de Tab segue a ordem visual: navegação, tema, ações, busca, pager, "Desça para explorar", filtros, projetos, Trajetória e contato.
 - Ficha e palette contêm o foco enquanto abertas e devolvem o foco à linha ou à seção ao fechar. `Esc` fecha a camada do topo.
 - A Trajetória usa lista ordenada real, sem `tabindex` e sem `role` artificial; cor não é o único diferenciador.
 - Com movimento reduzido, a troca de prévia não anima, o anúncio continua e a cena não aparece.
-- Sem JS: `.hero-stage`, pager, busca, filtros, tema, cópia de e-mail, fichas e "Ver montagem" ficam ocultos; perfil, projetos, Trajetória, sobre e contato continuam legíveis.
+- Sem JS: `.hero-stage`, pager, busca, filtros, tema, cópia de e-mail e fichas ficam ocultos; perfil, projetos, Trajetória, sobre e contato continuam legíveis.
 
 ## Responsiveness
 
@@ -180,6 +174,6 @@ Todos os itens do esquema continuam no DOM em todas as larguras. O índice do it
 - Fazer: respeitar movimento reduzido com conteúdo pronto; manter controles operáveis por teclado e foco visível.
 - Fazer: animar apenas `transform` e `opacity`; usar as durações dos tokens.
 - Fazer: descrever o projeto com fatos verificáveis e manter os esquemas dentro do conteúdo permitido.
-- Não fazer: alegar agentes de IA, inventar experiência, projetos, datas, métricas ou links.
+- Não fazer: inventar experiência, projetos, datas, métricas ou links.
 - Não fazer: copiar nome, imagem, textos ou identidade visual da referência analisada.
 - Não fazer: animar propriedades de layout, criar rolagem horizontal ou deixar controles flutuando sobre conteúdo.

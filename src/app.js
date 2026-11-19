@@ -8,16 +8,10 @@ import {
 } from "./content.js";
 import {
   CHANGE_FALLBACK_MS,
-  SCENE_DURATION_MS,
   buildUrl,
   collectStackOptions,
   countLabel,
   filterProjects,
-  getAgentIdlePosition,
-  getBlockSizeLabel,
-  getInitialAgentCount,
-  getSceneCursorPoint,
-  getSceneLeg,
   getSchematic,
   movePreviewIndex,
   moveSelection,
@@ -30,7 +24,6 @@ import {
   resolveTheme,
   resultLabel,
   searchItems,
-  shouldAnimate,
   shouldForceClose,
   shouldShowPager,
   themeToggleLabel,
@@ -90,41 +83,6 @@ const contact = {
 const theme = {
   toggle: null,
   current: "ink",
-};
-
-const SCENE_LEGS = 7;
-const SCENE_LABELS = ["MALHA", "LEITURA", "INTERFACE", "SERVIÇO", "DADOS", "CONTRASTE"];
-const SCENE_COLORS = ["var(--mint)", "var(--lime)", "var(--coral)"];
-const SCENE_TARGETS = [
-  ".hero-copy h1",
-  ".hero-facts",
-  ".hero-actions",
-  ".hero-stage",
-  ".filter-bar",
-  ".project-entry",
-  ".section-heading h2",
-  ".contact-email",
-  ".site-footer",
-];
-const SCENE_EVENTS = ["pointerdown", "keydown", "wheel", "scroll", "touchstart"];
-
-const scene = {
-  button: null,
-  layer: null,
-  status: null,
-  selection: null,
-  measure: null,
-  cursors: [],
-  legs: [],
-  count: 0,
-  currentLeg: -1,
-  frame: null,
-  timer: null,
-  endTimer: null,
-  startedAt: 0,
-  stoppedAt: Number.NEGATIVE_INFINITY,
-  running: false,
-  motion: null,
 };
 
 function findFeaturedSlug(rows) {
@@ -1017,210 +975,10 @@ function initContact() {
   contact.button?.addEventListener("click", copyContactEmail);
 }
 
-function announceBuild(message) {
-  if (!scene.status) return;
-  if (scene.timer !== null) clearTimeout(scene.timer);
-  scene.status.textContent = message;
-  scene.timer = setTimeout(() => {
-    if (scene.status) scene.status.textContent = "";
-    scene.timer = null;
-  }, COPY_FEEDBACK_MS);
-}
-
-function collectSceneTargets() {
-  const width = window.innerWidth;
-  const height = window.innerHeight;
-  const seen = new Set();
-  const targets = [];
-
-  SCENE_TARGETS.forEach((selector) => {
-    const element = document.querySelector(selector);
-    if (!element || seen.has(element)) return;
-    seen.add(element);
-
-    const rect = element.getBoundingClientRect();
-    if (rect.width < 40 || rect.height < 16) return;
-    if (rect.bottom <= 0 || rect.top >= height || rect.right <= 0 || rect.left >= width) return;
-    targets.push({ element, rect });
-  });
-
-  if (targets.length) return targets;
-  return [{ element: document.documentElement, rect: document.documentElement.getBoundingClientRect() }];
-}
-
-function planSceneLegs(targets) {
-  return Array.from({ length: SCENE_LEGS }, (_, index) => targets[index % targets.length]);
-}
-
-function createCursor(index) {
-  const node = document.createElement("div");
-  node.className = "agent-cursor";
-  node.style.setProperty("--agent-color", SCENE_COLORS[index % SCENE_COLORS.length]);
-  node.innerHTML = '<svg aria-hidden="true" viewBox="0 0 20 20"><path d="M3 2.5 17 9.6l-5.9 1.7-1.8 5.9z" /></svg>';
-
-  const label = document.createElement("span");
-  label.className = "agent-label";
-  label.textContent = SCENE_LABELS[index % SCENE_LABELS.length];
-  node.append(label);
-
-  return { node, label };
-}
-
-function easeOutCubic(value) {
-  const t = Math.min(1, Math.max(0, value));
-  return 1 - (1 - t) ** 3;
-}
-
-function paintSceneSelection(leg, index) {
-  const { selection, measure } = scene;
-  if (!selection || !measure || !leg) return;
-
-  const { rect } = leg;
-  selection.style.setProperty("--agent-color", SCENE_COLORS[index % SCENE_COLORS.length]);
-  selection.style.width = `${rect.width}px`;
-  selection.style.height = `${rect.height}px`;
-  selection.style.transform = `translate3d(${rect.x}px, ${rect.y}px, 0)`;
-  selection.classList.add("is-active");
-  measure.textContent = getBlockSizeLabel(rect);
-}
-
-function drawScene(elapsed) {
-  const info = getSceneLeg(elapsed, SCENE_DURATION_MS, scene.legs.length);
-  const index = Math.min(scene.legs.length - 1, info.index);
-  const leg = scene.legs[index];
-  const eased = easeOutCubic(info.progress / 0.55);
-
-  if (index !== scene.currentLeg) {
-    scene.currentLeg = index;
-    paintSceneSelection(leg, index);
-  }
-
-  scene.cursors.forEach((cursor, slot) => {
-    const from = index === 0
-      ? getAgentIdlePosition(slot, scene.count, window.innerWidth, window.innerHeight)
-      : getSceneCursorPoint(scene.legs[index - 1].rect, slot, scene.count);
-    const to = getSceneCursorPoint(leg.rect, slot, scene.count);
-    const x = from.x + (to.x - from.x) * eased;
-    const y = from.y + (to.y - from.y) * eased;
-
-    cursor.node.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
-    cursor.node.classList.toggle("is-active", eased > 0.5);
-  });
-}
-
-function tickScene(now) {
-  if (!scene.running) return;
-  scene.frame = null;
-
-  const elapsed = now - scene.startedAt;
-  drawScene(elapsed);
-
-  if (getSceneLeg(elapsed, SCENE_DURATION_MS, scene.legs.length).done) {
-    stopScene("Montagem concluída");
-    return;
-  }
-
-  scene.frame = requestAnimationFrame(tickScene);
-}
-
-function handleSceneInterrupt() {
-  if (scene.running) stopScene("Montagem interrompida");
-}
-
-function stopScene(message = "Montagem interrompida") {
-  if (!scene.running) return;
-
-  scene.running = false;
-  scene.stoppedAt = performance.now();
-
-  if (scene.frame !== null) {
-    cancelAnimationFrame(scene.frame);
-    scene.frame = null;
-  }
-
-  if (scene.endTimer !== null) {
-    clearTimeout(scene.endTimer);
-    scene.endTimer = null;
-  }
-
-  SCENE_EVENTS.forEach((name) => {
-    window.removeEventListener(name, handleSceneInterrupt, { capture: true });
-  });
-
-  scene.layer?.replaceChildren();
-  scene.cursors = [];
-  scene.selection = null;
-  scene.measure = null;
-  scene.legs = [];
-  scene.currentLeg = -1;
-
-  if (message) announceBuild(message);
-}
-
-function startScene() {
-  if (scene.running || !scene.layer) return;
-
-  const targets = collectSceneTargets();
-  const count = getInitialAgentCount({ width: window.innerWidth, height: window.innerHeight });
-
-  scene.layer.replaceChildren();
-  scene.legs = planSceneLegs(targets);
-  scene.count = count;
-  scene.currentLeg = -1;
-
-  const selection = document.createElement("div");
-  selection.className = "build-selection";
-  const measure = document.createElement("span");
-  measure.className = "build-measure";
-  selection.append(measure);
-
-  scene.selection = selection;
-  scene.measure = measure;
-  scene.cursors = Array.from({ length: count }, (_, index) => createCursor(index));
-  scene.layer.append(selection, ...scene.cursors.map((cursor) => cursor.node));
-
-  scene.running = true;
-  scene.startedAt = performance.now();
-  SCENE_EVENTS.forEach((name) => {
-    window.addEventListener(name, handleSceneInterrupt, { capture: true, passive: true });
-  });
-
-  announceBuild(`Montagem em cena: ${count} cursores`);
-  scene.frame = requestAnimationFrame(tickScene);
-  scene.endTimer = setTimeout(() => stopScene("Montagem concluída"), SCENE_DURATION_MS + 400);
-}
-
-function initScene() {
-  scene.button = document.querySelector("#scene-button");
-  scene.layer = document.querySelector("#agent-layer");
-  scene.status = document.querySelector("#build-status");
-  if (!scene.button || !scene.layer) return;
-
-  scene.motion = window.matchMedia("(prefers-reduced-motion: reduce)");
-  const sync = () => {
-    const enabled = shouldAnimate(scene.motion.matches)
-      && !document.documentElement.classList.contains("motion-reduced");
-    scene.button.hidden = !enabled;
-    if (!enabled) stopScene(null);
-  };
-
-  sync();
-  scene.button.addEventListener("click", () => {
-    if (scene.running) {
-      stopScene("Montagem interrompida");
-      return;
-    }
-    if (performance.now() - scene.stoppedAt < 400) return;
-    startScene();
-  });
-  scene.motion.addEventListener?.("change", sync);
-}
-
 function boot() {
   try {
     initTheme();
     initContact();
-    initScene();
 
     const year = document.querySelector("#year");
     if (year) year.textContent = String(new Date().getFullYear());
