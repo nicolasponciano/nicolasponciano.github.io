@@ -2601,6 +2601,29 @@ html.motion-reduced :is(.theme-toggle, .button, .filter-tag, .filter-clear, .pro
   }
 }
 
+@media (max-width: 600px) {
+  .site-header {
+    flex-wrap: wrap;
+    gap: 0;
+    padding-block: 8px;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .site-nav {
+    flex-wrap: wrap;
+  }
+
+  .site-nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}
+
 @media (max-width: 390px) {
   .site-nav {
     gap: 11px;
