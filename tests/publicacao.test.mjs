@@ -113,7 +113,8 @@ test("a publicação expõe três projetos na ordem aprovada, sem link privado",
   assert.equal(privateBlocks.length, 2, "MarcAi e Seirei ficam como código privado");
   privateBlocks.forEach((block) => {
     const slug = block.match(/data-project-slug="([^"]+)"/)?.[1] ?? "desconhecido";
-    assert.doesNotMatch(block, /<a\b[^>]*href=/, `${slug} não pode expor link de repositório`);
+    const links = [...block.matchAll(/<a\b[^>]*href="([^"]+)"/g)].map((match) => match[1]);
+    assert.deepEqual(links, slug === "marcai" ? ["https://marcai-demo.netlify.app/"] : []);
   });
 
   const publicBlock = blocks.find((block) => /data-project-slug="open-mind"/.test(block)) ?? "";

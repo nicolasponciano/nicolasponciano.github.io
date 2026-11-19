@@ -338,7 +338,7 @@ const APPROVED_ROWS = [
       "Plataforma de agendamentos multi-tenant com agenda por profissional, papéis de acesso e página pública de agendamento.",
     year: "2026",
     stacks: ["Next.js", "TypeScript", "PostgreSQL"],
-    link: null,
+    link: ["https://marcai-demo.netlify.app/", "Ver demo"],
     privateCode: true,
   },
   {
@@ -417,7 +417,7 @@ test("só o projeto público tem âncora de repositório, sem link privado nem l
   const section = html.slice(html.indexOf('id="projetos"'), html.indexOf("</section>", html.indexOf('id="projetos"')));
   const anchors = [...section.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>([^<]+)</g)].map((m) => [m[1], m[2]]);
 
-  assert.deepEqual(anchors, [["https://github.com/nicolasponciano/open-mind", "GitHub"]]);
+  assert.deepEqual(anchors, [["https://marcai-demo.netlify.app/", "Ver demo"], ["https://github.com/nicolasponciano/open-mind", "GitHub"]]);
   assert.equal((section.match(/>Código privado</g) ?? []).length, 2, "MarcAi e Seirei exibem Código privado");
   assert.doesNotMatch(section, /href="#"/, "estado privado não pode virar link artificial");
   assert.doesNotMatch(section, /disabled/, "estado privado não pode virar botão desabilitado");
