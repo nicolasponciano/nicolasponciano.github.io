@@ -12,7 +12,7 @@ Hoje a seção apresenta seis linhas numeradas. Quem procura experiência em .NE
 | --- | --- |
 | Backend e APIs | C#, .NET, ASP.NET Core, ASP.NET MVC, VB.NET, APIs RESTful, JWT, Swagger/OpenAPI, integrações |
 | Dados | SQL Server, T-SQL, Entity Framework, LINQ |
-| Web | HTML5, CSS3, JavaScript, Vue.js, Bootstrap |
+| Web | HTML5, CSS3, JavaScript, TypeScript, Next.js, Vue.js, Bootstrap |
 | Engenharia de software | Git, Clean Architecture, SOLID, testes automatizados |
 | Em estudo | LLMs, MCP, RAG, automação |
 

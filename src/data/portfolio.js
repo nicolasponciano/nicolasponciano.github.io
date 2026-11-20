@@ -28,6 +28,8 @@ export const skillGroups = [
       { name: "HTML5", icon: "html5" },
       { name: "CSS3", icon: "css3" },
       { name: "JavaScript", icon: "javascript" },
+      { name: "TypeScript", icon: "typescript" },
+      { name: "Next.js", icon: "nextjs" },
       { name: "Vue.js", icon: "vuejs" },
       { name: "Bootstrap", icon: "bootstrap" },
     ],
