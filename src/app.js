@@ -1,6 +1,8 @@
-import { projectDetails } from "./data/portfolio.js";
+import { createGallery } from "./gallery.js";
+import { projectDetails, skillGroups } from "./data/portfolio.js";
 import {
   OBSOLETE_PROJECT_NOTICE,
+  renderSkillGroups,
   fillProjectDialog,
   formatValue,
   getProjectDetails,
@@ -376,12 +378,15 @@ function closeDialogLocal() {
   unlockScroll();
 }
 
+let gallery;
+
 function openProject(slug) {
   const entry = page.bySlug.get(slug);
   if (!entry || !page.dialog) return;
 
   palette.opener = null;
   closePalette();
+  gallery.reset(entry.details.screenshots);
   fillProjectDialog(page.dialog, { row: entry.data, details: entry.details });
 
   if (!page.dialog.open) {
@@ -584,13 +589,14 @@ function bindDialog() {
   if (!dialog) return;
 
   page.dialog = dialog;
+  gallery = createGallery(dialog);
   dialog.querySelector("[data-dialog-close]")?.addEventListener("click", requestClose);
   dialog.addEventListener("click", (event) => {
     if (event.target === dialog) requestClose();
   });
   dialog.addEventListener("cancel", (event) => {
     event.preventDefault();
-    requestClose();
+    if (!gallery.returnToSheet()) requestClose();
   });
   dialog.addEventListener("close", unlockScroll);
 }
@@ -979,6 +985,7 @@ function boot() {
   try {
     initTheme();
     initContact();
+    renderSkillGroups(document.querySelector("#skill-groups"), skillGroups);
 
     const year = document.querySelector("#year");
     if (year) year.textContent = String(new Date().getFullYear());

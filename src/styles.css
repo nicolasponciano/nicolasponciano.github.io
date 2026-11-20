@@ -1518,35 +1518,52 @@ h2 {
 
 .skill-field {
   display: grid;
-  align-content: start;
-  padding-top: 4px;
+  gap: 24px;
+  min-width: 0;
 }
 
-.skill-row {
-  display: flex;
-  align-items: baseline;
-  gap: 18px;
-  padding: 15px 0;
-  border-bottom: 1px solid var(--line);
-  font-size: 17px;
-}
-
-.skill-row:first-child {
+.skill-group {
   border-top: 1px solid var(--line-strong);
+  padding-top: 14px;
 }
 
-.skill-num {
-  color: var(--mint-text);
-  font-size: 10px;
-  letter-spacing: 0.08em;
+.skill-group h3 {
+  margin: 0 0 12px;
+  font-size: 1.2rem;
+  color: var(--paper);
 }
 
-.skill-row:nth-child(2) .skill-num {
-  color: var(--lime-text);
+.skill-group ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
 }
 
-.skill-row:nth-child(3) .skill-num {
-  color: var(--coral-text);
+.skill-group li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--ink-raised);
+  color: var(--paper);
+}
+
+.skill-icon {
+  box-sizing: border-box;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  padding: 3px;
+  border-radius: 4px;
+  background: #fff;
+  object-fit: contain;
 }
 
 .about-note {
@@ -1870,6 +1887,69 @@ h2 {
   color: rgba(11, 29, 39, 0.82);
   font-size: 16px;
 }
+
+.project-dialog [hidden] { display: none; }
+
+.screen-gallery { min-width: 0; gap: 12px; }
+.screen-gallery h3, .screen-gallery figure { margin: 0; }
+.screen-frame {
+  display: grid;
+  place-items: center;
+  height: clamp(190px, 40vh, 340px);
+  border: 1px solid rgba(11, 29, 39, .2);
+  background: rgba(11, 29, 39, .04);
+}
+.screen-frame img { width: 100%; height: 100%; min-height: 0; object-fit: contain; }
+.screen-gallery figcaption { margin-top: 8px; min-height: 3em; }
+.screen-gallery [data-enlarge] { justify-self: start; margin: 0; }
+.screen-choices { display: flex; flex-wrap: wrap; gap: 8px; }
+.screen-choices button {
+  display: grid;
+  gap: 5px;
+  width: min(100%, 112px);
+  padding: 5px;
+  border: 1px solid rgba(11, 29, 39, .32);
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.screen-choices button[aria-pressed="true"] {
+  box-shadow: inset 0 0 0 2px currentColor;
+  font-weight: bold;
+}
+.screen-choices img { width: 100%; height: 44px; object-fit: contain; }
+.project-dialog:has(.screen-viewer:not([hidden])) {
+  width: 100vw;
+  max-width: 100vw;
+  height: 100dvh;
+  max-height: 100dvh;
+}
+.screen-viewer { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+.screen-viewer .dialog-bar { flex-wrap: wrap; gap: 8px; }
+.screen-viewer .dialog-bar strong { margin-right: auto; }
+.screen-viewer .dialog-close { margin-left: 0; }
+.screen-pan {
+  display: flex;
+  flex: 1;
+  overflow: auto;
+  overscroll-behavior: contain;
+  min-height: 0;
+  background: var(--ink);
+}
+.screen-pan img {
+  flex: none;
+  margin: auto;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  cursor: zoom-in;
+}
+.screen-pan.original-size img { max-width: none; max-height: none; cursor: zoom-out; }
+.screen-pan p { color: var(--paper); }
+.screen-pan p { padding: 20px; }
 
 .dialog-links {
   display: flex;
@@ -2512,4 +2592,28 @@ html.motion-reduced :is(.theme-toggle, .button, .filter-tag, .filter-clear, .pro
   :is(.theme-toggle, .button, .filter-tag, .filter-clear, .project-open, .dialog-close, .dialog-links a, .copy-email, .stage-button):active {
     transform: none;
   }
+}
+.contact-links a[href^="https://www.linkedin.com/"] {
+  --social-icon: url("../assets/branding/svg/linkedin.svg");
+}
+
+:is(.contact-links, .project-links, .dialog-links) a[href^="https://github.com/"] {
+  --social-icon: url("../assets/branding/svg/github.svg");
+}
+
+:is(.contact-links, .project-links, .dialog-links) a:is([href^="https://github.com/"], [href^="https://www.linkedin.com/"]) {
+  display: inline-flex;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  font-size: 0;
+}
+
+:is(.contact-links, .project-links, .dialog-links) a:is([href^="https://github.com/"], [href^="https://www.linkedin.com/"])::before {
+  content: "";
+  width: 22px;
+  height: 22px;
+  background: currentColor;
+  mask: var(--social-icon) center / contain no-repeat;
 }

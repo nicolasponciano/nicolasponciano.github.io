@@ -45,6 +45,7 @@ export function getProjectDetails(details, slug) {
     featured: entry.featured === true,
     preview: previewTypes.includes(entry.preview) ? entry.preview : "panel",
     codeVisibility: entry.codeVisibility === "private" ? "private" : "public",
+    screenshots: entry.screenshots ?? [],
     schematic: entry.schematic ?? null,
   };
 }
@@ -116,4 +117,31 @@ export function fillProjectDialog(dialog, { row, details } = {}) {
     }
     linksBox.append(anchor);
   });
+}
+export function renderSkillGroups(container, groups) {
+  if (!container) return;
+  const doc = container.ownerDocument;
+  const sections = groups.map(({ title, items }) => {
+    const section = doc.createElement("section");
+    section.className = "skill-group";
+    const heading = doc.createElement("h3");
+    heading.textContent = title;
+    const list = doc.createElement("ul");
+    for (const { name, icon } of items) {
+      const item = doc.createElement("li");
+      if (icon) {
+        const mark = doc.createElement("img");
+        mark.className = "skill-icon";
+        mark.setAttribute("aria-hidden", "true");
+        mark.alt = "";
+        mark.src = `assets/skills/${icon}.svg`;
+        item.append(mark);
+      }
+      item.append(name);
+      list.append(item);
+    }
+    section.append(heading, list);
+    return section;
+  });
+  container.replaceChildren(...sections);
 }

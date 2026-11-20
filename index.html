@@ -252,7 +252,7 @@
                 <p class="path-period">fev. 2026 a atual</p>
                 <div class="path-body">
                   <p class="path-role">Desenvolvedor de Software Júnior</p>
-                  <p class="path-org">Empresa do setor de tecnologia <span class="path-place">Rio de Janeiro</span></p>
+                  <p class="path-org">ED Soluções Técnológicas <span class="path-place">Rio de Janeiro</span></p>
                 </div>
               </li>
               <li class="path-item">
@@ -305,14 +305,7 @@
           <h2>Ferramentas de trabalho</h2>
            <p data-content="profile.skillsNote">Backend, web, dados e ferramentas para construir e evoluir software com segurança.</p>
         </div>
-        <div class="skill-field" aria-label="Tecnologias">
-           <p class="skill-row"><span class="skill-num" aria-hidden="true">01</span><span data-content="skills.0">C# · .NET · ASP.NET Core · ASP.NET MVC · VB.NET</span></p>
-           <p class="skill-row"><span class="skill-num" aria-hidden="true">02</span><span data-content="skills.1">APIs RESTful · JWT · Swagger/OpenAPI · integrações</span></p>
-           <p class="skill-row"><span class="skill-num" aria-hidden="true">03</span><span data-content="skills.2">SQL Server · T-SQL · Entity Framework · LINQ</span></p>
-           <p class="skill-row"><span class="skill-num" aria-hidden="true">04</span><span data-content="skills.3">HTML5 · CSS3 · JavaScript · Vue.js · Bootstrap</span></p>
-           <p class="skill-row"><span class="skill-num" aria-hidden="true">05</span><span data-content="skills.4">Clean Architecture · SOLID · testes automatizados · Git</span></p>
-           <p class="skill-row"><span class="skill-num" aria-hidden="true">06</span><span data-content="skills.5">LLMs · MCP · RAG · automação (em estudo)</span></p>
-        </div>
+        <div class="skill-field" id="skill-groups"></div>
         <div class="about-note">
           <span class="about-mark" aria-hidden="true"></span>
            <p data-content="profile.about">Atuo no desenvolvimento, manutenção e evolução de sistemas web corporativos, participando de requisitos, arquitetura, implementação, testes, deploy e suporte. Tenho experiência com .NET, bancos relacionais, integrações e interfaces web. Atualmente curso Pós-Graduação em Inteligência Artificial e busco desafios de Backend e Full Stack em que possa aplicar engenharia de software e ampliar minha atuação com IA.</p>
@@ -327,7 +320,7 @@
         <div class="contact-action">
           <span class="contact-note">E-mail direto</span>
           <div class="contact-links" id="contact-links">
-             <a class="contact-email" id="contact-email" href="mailto:niickponciano@gmail.com">niickponciano@gmail.com</a>
+             <a class="contact-email" id="contact-email" href="mailto:nicolaslponciano@gmail.com">nicolaslponciano@gmail.com</a>
              <button type="button" class="copy-email" id="copy-email">Copiar e-mail</button>
            </div>
            <div class="contact-links">
@@ -368,8 +361,28 @@
             <p data-dialog-solution></p>
           </section>
         </div>
+        <section class="screen-gallery dialog-sections" hidden aria-labelledby="gallery-title">
+          <h3 id="gallery-title">Telas do projeto</h3>
+          <figure>
+            <div class="screen-frame"><img data-screen alt=""></div>
+            <figcaption data-caption aria-live="polite"></figcaption>
+          </figure>
+          <button class="dialog-close" type="button" data-enlarge>Ampliar tela</button>
+          <div class="screen-choices" aria-label="Selecionar tela" role="group"></div>
+        </section>
         <div class="dialog-links" data-dialog-links></div>
       </div>
+      <section class="screen-viewer" hidden aria-labelledby="screen-title">
+        <div class="dialog-bar">
+          <strong id="screen-title"></strong>
+          <button type="button" class="dialog-close" data-zoom>Ver em 100%</button>
+          <button type="button" class="dialog-close" data-return>Voltar à ficha</button>
+        </div>
+        <div class="screen-pan" tabindex="0" role="region" aria-label="Detalhes da captura">
+          <img alt="">
+          <p hidden>Não foi possível carregar a ampliação.</p>
+        </div>
+      </section>
     </dialog>
 
     <dialog class="command-palette" id="command-palette" aria-labelledby="command-palette-title">

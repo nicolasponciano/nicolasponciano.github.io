@@ -125,6 +125,9 @@ test("o selo das prévias vem do contrato de dados, não de um texto fixo no HTM
   assert.match(app, /\[data-preview-note\]/, "a prévia compacta usa o mesmo selo");
 });
 
+test("a página abre sem controle de montagem nem camada de agentes", () => {
+  assert.doesNotMatch(readFileSync(pagePath, "utf8"), /scene-button|agent-layer|Ver montagem/);
+});
 
 test("a barra de filtro tem tag inicial, contagem anunciada e estado vazio", () => {
   const html = readFileSync(pagePath, "utf8");
@@ -176,7 +179,7 @@ test("a Trajetória fica entre Projetos e Sobre com as seis entradas do currícu
   assert.equal(items.length, 6, "três experiências e três formações");
 
   const expected = [
-    { period: "fev. 2026 a atual", role: "Desenvolvedor de Software Júnior", org: "Empresa do setor de tecnologia", place: "Rio de Janeiro" },
+    { period: "fev. 2026 a atual", role: "Desenvolvedor de Software Júnior", org: "ED Soluções Técnológicas", place: "Rio de Janeiro" },
     { period: "jul. 2025 a fev. 2026", role: "Desenvolvedor de Software Júnior", org: "SOFTCASE Soluções Tecnológicas", place: "Santos" },
     { period: "jul. 2024 a jul. 2025", role: "Estágio em Desenvolvimento de Software", org: "SOFTCASE Soluções Tecnológicas", place: "São Vicente" },
     { period: "fev. 2026 a fev. 2027", role: "Pós-Graduação em Inteligência Artificial", org: "Universidade Santa Cecília" },

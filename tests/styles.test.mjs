@@ -519,3 +519,15 @@ test("contato copiável tem alvo de 44 px e mantém o mailto visível", () => {
   assert.match(css, /\.copy-email:hover\s*{/);
   assert.match(css, /\.contact-email:hover\s*{/);
 });
+
+test("o rodapé do hero se adapta ao celular", () => {
+  const css = readCss();
+  const foot = readRule(css, ".hero-foot {");
+  assert.match(foot, /flex-wrap:\s*wrap/);
+  assert.match(css, /\.hero-foot-actions\s*{[^}]*display:\s*flex/);
+
+  const ranges = mediaRanges(css, "@media (max-width: 720px)");
+  assert.ok(ranges.length > 0, "o breakpoint de 720 px precisa existir");
+  const block = ranges.map(([open, close]) => css.slice(open, close)).join("\n");
+  assert.match(block, /\.hero-foot\s*{[^}]*position:\s*static/, "no mobile o rodapé entra no fluxo do hero");
+});
