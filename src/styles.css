@@ -376,6 +376,41 @@ html[data-theme="paper"] .wordmark-logo-light {
   padding-block: 30px;
 }
 
+.hero {
+  isolation: isolate;
+}
+
+.hero-plates {
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  width: clamp(230px, 40vw, 600px);
+  aspect-ratio: 1;
+  left: 52%;
+  top: 8%;
+  transform: translateX(-50%);
+  opacity: .5;
+}
+
+.hero-plates img,
+.hero-plates canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-plates:has(canvas) img {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .hero-plates {
+    left: 86%;
+    top: 0;
+    opacity: .32;
+  }
+}
+
 h1,
 h2,
 h3,
