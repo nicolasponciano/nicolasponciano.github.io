@@ -4,27 +4,22 @@ const motion = matchMedia("(prefers-reduced-motion: reduce)");
 function createMesh(THREE) {
   const vertices = [];
   const shades = [];
-  const columns = 180;
-  const rows = 48;
-  // Put the coarser lattice first so small screens can draw it without rebuilding geometry.
-  let mobileCount = 0;
-  for (const coarse of [true, false]) {
-    for (let row = 0; row <= rows; row++) {
-      const depth = row / rows;
-      const z = (depth - .5) * 2.15;
-      for (let column = 0; column <= columns; column++) {
-        if ((row % 2 === 0 && column % 2 === 0) !== coarse) continue;
-        const x = (column / columns - .5) * (8.7 + depth * 1.8);
-        const ridge = z - .36 * Math.sin(1.35 * x) + .12 * x;
-        const shoulder = Math.exp(-2.8 * ridge * ridge);
-        const crest = shoulder * (.43 + .23 * Math.sin(2.15 * x - .7))
-          + .19 * Math.sin(1.6 * x + 2.7 * z) - .24;
-        vertices.push(x, crest, z);
-        const shade = .56 + .26 * depth + .18 * shoulder;
-        shades.push(shade, shade, shade);
-      }
+  const columns = 170;
+  const rows = 44;
+  for (let row = 0; row <= rows; row++) {
+    const depth = row / rows;
+    const z = (depth - .5) * 2.3;
+    // Wider spacing toward the viewer gives the point field a low horizon.
+    const spread = .92 + .37 * depth;
+    for (let column = 0; column <= columns; column++) {
+      const x = (column / columns - .5) * 9.2 * spread;
+      const crest = .35 * Math.sin(1.65 * x + 1.9 * z)
+        + .16 * Math.sin(2.8 * x - 2.5 * z)
+        + .07 * Math.cos(4.2 * x + 3 * z);
+      vertices.push(x, crest - .12, z);
+      const shade = .75 + .25 * depth;
+      shades.push(shade, shade, shade);
     }
-    if (coarse) mobileCount = vertices.length / 3;
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
@@ -43,18 +38,11 @@ function createMesh(THREE) {
        float angle = scrollTurn + 0.38 * (sin(offset - scrollTurn) - sin(offset));
        float c = cos(angle), s = sin(angle);
        transformed.yz = mat2(c, s, -s, c) * transformed.yz;`
-    ).replace("gl_PointSize = size;", "gl_PointSize = size * clamp(1.1 + transformed.z * .34, .78, 1.52);");
-    shader.fragmentShader = shader.fragmentShader.replace(
-      "#include <alphamap_fragment>",
-      `#include <alphamap_fragment>
-       float radius = length(gl_PointCoord - 0.5);
-       diffuseColor.a *= 1.0 - smoothstep(0.29, 0.5, radius);`
     );
   };
   const mesh = new THREE.Points(geometry, material);
   mesh.rotation.x = .15;
   mesh.userData.turn = turn;
-  mesh.userData.mobileCount = mobileCount;
   return mesh;
 }
 
@@ -80,9 +68,7 @@ function draw(time) {
   mesh.userData.turn.value = displayedProgress * Math.PI / 3;
   previousTime = settling ? time : undefined;
   const ratio = Math.min(devicePixelRatio, 1.5);
-  const compact = layer.clientWidth < 700;
-  mesh.geometry.setDrawRange(0, compact ? mesh.userData.mobileCount : Infinity);
-  mesh.material.size = (compact ? 1.8 : 2.1) * ratio;
+  mesh.material.size = (layer.clientWidth < 700 ? 1 : 1.6) * ratio;
   const width = Math.max(1, Math.round(layer.clientWidth * ratio));
   const height = Math.max(1, Math.round(layer.clientHeight * ratio));
   if (renderer.domElement.width !== width || renderer.domElement.height !== height) {
