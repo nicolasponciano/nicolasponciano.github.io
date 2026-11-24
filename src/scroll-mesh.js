@@ -28,7 +28,22 @@ function createMesh(THREE) {
     color: 0x45ae9f, size: 1.6, sizeAttenuation: false, vertexColors: true,
     transparent: true, opacity: .76, depthWrite: false
   });
-  return new THREE.Points(geometry, material);
+  const turn = { value: 0 };
+  material.onBeforeCompile = shader => {
+    shader.uniforms.scrollTurn = turn;
+    shader.vertexShader = "uniform float scrollTurn;\n" + shader.vertexShader.replace(
+      "#include <begin_vertex>",
+      `#include <begin_vertex>
+       float offset = position.x * 0.8;
+       float angle = scrollTurn + 0.38 * (sin(offset - scrollTurn) - sin(offset));
+       float c = cos(angle), s = sin(angle);
+       transformed.yz = mat2(c, s, -s, c) * transformed.yz;`
+    );
+  };
+  const mesh = new THREE.Points(geometry, material);
+  mesh.rotation.x = .15;
+  mesh.userData.turn = turn;
+  return mesh;
 }
 
 let view;
@@ -42,16 +57,15 @@ function draw(time) {
   frame = 0;
   if (!view || motion.matches || document.hidden) return;
   const { renderer, scene, camera, mesh } = view;
-  const range = document.documentElement.scrollHeight - innerHeight;
-  const progress = range > 0 ? Math.min(1, Math.max(0, scrollY / range)) : 0;
+  const range = Math.max(0, document.documentElement.scrollHeight - innerHeight);
+  const progress = Math.min(range, Math.max(0, scrollY)) / Math.max(1, innerHeight);
   const elapsed = previousTime === undefined ? 16 : Math.min(time - previousTime, 64);
   displayedProgress ??= progress;
   displayedProgress += (progress - displayedProgress) * (1 - Math.exp(-elapsed / 85));
   const settling = Math.abs(progress - displayedProgress) > .0001;
   if (!settling) displayedProgress = progress;
-  const phase = displayedProgress * Math.PI * 2;
-  mesh.rotation.set(.49 - .34 * Math.cos(phase) + .16 * displayedProgress,
-    .14 * Math.sin(phase), 0, "YXZ");
+  // One full turn every six viewport heights keeps the gesture consistent across pages.
+  mesh.userData.turn.value = displayedProgress * Math.PI / 3;
   previousTime = settling ? time : undefined;
   const ratio = Math.min(devicePixelRatio, 1.5);
   mesh.material.size = (layer.clientWidth < 700 ? 1 : 1.6) * ratio;
