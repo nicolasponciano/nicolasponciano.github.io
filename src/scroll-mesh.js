@@ -28,9 +28,22 @@ function createMesh(THREE) {
     color: 0x45ae9f, size: 1.6, sizeAttenuation: false, vertexColors: true,
     transparent: true, opacity: .76, depthWrite: false
   });
+  const turn = { value: 0 };
+  material.onBeforeCompile = shader => {
+    shader.uniforms.scrollTurn = turn;
+    shader.vertexShader = "uniform float scrollTurn;\n" + shader.vertexShader.replace(
+      "#include <begin_vertex>",
+      `#include <begin_vertex>
+       float offset = position.x * 0.8;
+       float angle = scrollTurn + 0.38 * (sin(offset - scrollTurn) - sin(offset));
+       float c = cos(angle), s = sin(angle);
+       transformed.yz = mat2(c, s, -s, c) * transformed.yz;`
+    );
+  };
   const mesh = new THREE.Points(geometry, material);
   mesh.rotation.order = "YXZ";
   mesh.rotation.x = .15;
+  mesh.userData.turn = turn;
   return mesh;
 }
 
@@ -52,6 +65,7 @@ function draw(time) {
   displayedProgress += (progress - displayedProgress) * (1 - Math.exp(-elapsed / 85));
   const settling = Math.abs(progress - displayedProgress) > .0001;
   if (!settling) displayedProgress = progress;
+  mesh.userData.turn.value = displayedProgress * Math.PI / 3;
   // Sweep around the vertical axis and compensate for the projected width.
   const yaw = .36 * Math.sin(displayedProgress * Math.PI / 2);
   mesh.rotation.y = yaw;
