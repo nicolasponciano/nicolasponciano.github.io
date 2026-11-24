@@ -2,22 +2,25 @@ const layer = document.querySelector(".scroll-mesh");
 const motion = matchMedia("(prefers-reduced-motion: reduce)");
 
 function createMesh(THREE) {
-  // A half twist joins the two ends into one continuous Möbius surface.
-  function point(angle, width) {
-    const radius = 1.1 + width * Math.cos(angle / 2);
-    return new THREE.Vector3(radius * Math.cos(angle), radius * Math.sin(angle), width * Math.sin(angle / 2));
-  }
   const vertices = [];
-  function segment(a, b) {
-    vertices.push(a.x, a.y, a.z, b.x, b.y, b.z);
+  const columns = 120;
+  const rows = 16;
+  function point(column, row) {
+    const t = column / columns;
+    const offset = (row / rows - .5) * 1.15;
+    const twist = t * Math.PI * 2.4 - .7;
+    return [
+      (t - .5) * 8.2,
+      .43 * Math.sin(t * Math.PI * 2.7) + offset * Math.cos(twist),
+      .34 * Math.cos(t * Math.PI * 2) + offset * Math.sin(twist)
+    ];
   }
-  for (let ring = 0; ring < 96; ring++) {
-    const angle = ring * Math.PI / 48;
-    for (let strand = 0; strand <= 12; strand++) {
-      const width = (strand - 6) * .083;
-      segment(point(angle, width), point(angle + Math.PI / 48, width));
+  for (let column = 0; column <= columns; column++) {
+    for (let row = 0; row <= rows; row++) {
+      const position = point(column, row);
+      if (column < columns) vertices.push(...position, ...point(column + 1, row));
+      if (row < rows && column % 3 === 0) vertices.push(...position, ...point(column, row + 1));
     }
-    if (ring % 2 === 0) segment(point(angle, -.498), point(angle, .498));
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
@@ -36,9 +39,13 @@ function draw() {
   const { renderer, scene, camera, mesh } = view;
   const range = document.documentElement.scrollHeight - innerHeight;
   const progress = range > 0 ? Math.min(1, Math.max(0, scrollY / range)) : 0;
-  mesh.rotation.set(.78 + .55 * Math.sin(progress * Math.PI), -.32 + progress * Math.PI * 2, -.42 + .65 * progress);
-  const size = Math.max(1, Math.round(layer.clientWidth * Math.min(devicePixelRatio, 1.5)));
-  if (renderer.domElement.width !== size) renderer.setSize(size, size, false);
+  mesh.rotation.x = .22 + progress * Math.PI * 2;
+  const ratio = Math.min(devicePixelRatio, 1.5);
+  const width = Math.max(1, Math.round(layer.clientWidth * ratio));
+  const height = Math.max(1, Math.round(layer.clientHeight * ratio));
+  if (renderer.domElement.width !== width || renderer.domElement.height !== height) {
+    renderer.setSize(width, height, false);
+  }
   renderer.render(scene, camera);
 }
 
@@ -56,7 +63,7 @@ async function sync() {
     const scene = new THREE.Scene();
     const mesh = createMesh(THREE);
     scene.add(mesh);
-    const camera = new THREE.OrthographicCamera(-1.8, 1.8, 1.8, -1.8, .1, 20);
+    const camera = new THREE.OrthographicCamera(-4, 4, 1.2, -1.2, .1, 20);
     camera.position.z = 6;
     renderer.domElement.addEventListener("webglcontextlost", () => renderer.domElement.remove());
     renderer.domElement.addEventListener("webglcontextrestored", sync);

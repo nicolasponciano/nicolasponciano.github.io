@@ -380,10 +380,9 @@ html[data-theme="paper"] .wordmark-logo-light {
   position: fixed;
   z-index: 0;
   pointer-events: none;
-  width: clamp(320px, 62vmin, 760px);
-  aspect-ratio: 1;
-  right: -5vmin;
-  bottom: -8vmin;
+  inset-inline: 0;
+  height: clamp(150px, 30vw, 42vh);
+  bottom: 8vh;
   opacity: .53;
 }
 
@@ -405,7 +404,6 @@ html[data-theme="paper"] .wordmark-logo-light {
 
 @media (max-width: 700px) {
   .scroll-mesh {
-    right: -90px;
     bottom: 4vh;
     opacity: .38;
   }
@@ -1156,7 +1154,7 @@ h2 {
 .path-place::before {
   margin: 0 7px;
   color: var(--muted);
-  content: "·";
+  content: "Â·";
 }
 
 @media (min-width: 1024px) {
