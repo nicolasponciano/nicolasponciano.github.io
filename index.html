@@ -35,9 +35,12 @@
     </script>
     <link rel="stylesheet" href="src/styles.css">
     <script type="module" src="src/app.js"></script>
-    <script type="module" src="src/hero-plates.js"></script>
+    <script type="module" src="src/scroll-mesh.js"></script>
   </head>
   <body>
+    <div class="scroll-mesh" aria-hidden="true">
+      <img src="assets/scroll-mesh.png" width="768" height="768" alt="">
+    </div>
     <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
 
     <header class="site-header">
@@ -64,9 +67,6 @@
 
     <main id="conteudo">
       <section class="hero section-shell" id="topo" data-section="hero" data-section-label="Apresentação">
-        <div class="hero-plates" aria-hidden="true">
-          <img src="assets/hero-plates.png" width="768" height="768" alt="">
-        </div>
         <div class="hero-copy">
           <p class="hero-kicker">Desenvolvedor de Software Full Stack</p>
           <h1>Nicolas Ponciano</h1>
