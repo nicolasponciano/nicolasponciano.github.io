@@ -13,9 +13,9 @@ function createMesh(THREE) {
     const spread = .92 + .37 * depth;
     for (let column = 0; column <= columns; column++) {
       const x = (column / columns - .5) * 9.2 * spread;
-      const crest = .35 * Math.sin(1.65 * x + 1.9 * z)
-        + .16 * Math.sin(2.8 * x - 2.5 * z)
-        + .07 * Math.cos(4.2 * x + 3 * z);
+      const crest = .39 * Math.sin(1.55 * x + 1.9 * z)
+        + .13 * Math.sin(2.8 * x - 2.5 * z)
+        + .045 * Math.cos(4.2 * x + 3 * z);
       vertices.push(x, crest - .12, z);
       const shade = .75 + .25 * depth;
       shades.push(shade, shade, shade);
