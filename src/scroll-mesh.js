@@ -1,5 +1,6 @@
 const layer = document.querySelector(".scroll-mesh");
 const motion = matchMedia("(prefers-reduced-motion: reduce)");
+const compactLayout = matchMedia("(max-width: 700px)");
 const baseOpacity = .76;
 const fieldWidth = 9.2 * .92;
 const fieldDepth = 2.3;
@@ -8,6 +9,7 @@ const cameraHalfWidth = 4;
 function createMesh(THREE) {
   const vertices = [];
   const shades = [];
+  const mobilePoints = [];
   const columns = 170;
   const rows = 44;
   for (let row = 0; row <= rows; row++) {
@@ -20,6 +22,7 @@ function createMesh(THREE) {
       const crest = .39 * Math.sin(1.55 * x + 1.9 * z)
         + .13 * Math.sin(2.8 * x - 2.5 * z)
         + .045 * Math.cos(4.2 * x + 3 * z);
+      if (row % 2 === 0 && column % 2 === 0) mobilePoints.push(vertices.length / 3);
       vertices.push(x, crest - .12, z);
       const shade = .75 + .25 * depth;
       shades.push(shade, shade, shade);
@@ -34,6 +37,7 @@ function createMesh(THREE) {
   });
   const mesh = new THREE.Points(geometry, material);
   mesh.rotation.x = .15;
+  mesh.userData.mobileIndex = new THREE.Uint16BufferAttribute(mobilePoints, 1);
   return mesh;
 }
 
@@ -66,7 +70,10 @@ function draw(time) {
   mesh.material.opacity = baseOpacity * (.38 + .62 * facing);
   previousTime = settling ? time : undefined;
   const ratio = Math.min(devicePixelRatio, 1.5);
-  mesh.material.size = (layer.clientWidth < 700 ? 1 : 1.6) * ratio;
+  const compact = compactLayout.matches;
+  const pointIndex = compact ? mesh.userData.mobileIndex : null;
+  if (mesh.geometry.index !== pointIndex) mesh.geometry.setIndex(pointIndex);
+  mesh.material.size = (compact ? 1.4 : 1.6) * ratio;
   const width = Math.max(1, Math.round(layer.clientWidth * ratio));
   const height = Math.max(1, Math.round(layer.clientHeight * ratio));
   if (renderer.domElement.width !== width || renderer.domElement.height !== height) {
