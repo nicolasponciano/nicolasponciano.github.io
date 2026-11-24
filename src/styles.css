@@ -1154,7 +1154,7 @@ h2 {
 .path-place::before {
   margin: 0 7px;
   color: var(--muted);
-  content: "Ã‚Â·";
+  content: "Â·";
 }
 
 @media (min-width: 1024px) {
