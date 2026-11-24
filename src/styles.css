@@ -406,7 +406,8 @@ html[data-theme="paper"] .wordmark-logo-light {
   .scroll-mesh {
     height: clamp(190px, 28svh, 260px);
     bottom: 4svh;
-    opacity: .49;
+    opacity: .46;
+    mask-image: linear-gradient(to bottom, transparent, #000 24%, #000 72%, transparent);
   }
 }
 

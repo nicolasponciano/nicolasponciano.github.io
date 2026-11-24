@@ -54,9 +54,11 @@ function draw(time) {
   const { renderer, scene, camera, mesh } = view;
   const range = Math.max(0, document.documentElement.scrollHeight - innerHeight);
   const progress = range > 0 ? Math.min(1, Math.max(0, scrollY / range)) : 0;
+  const compact = compactLayout.matches;
+  const smoothingTime = compact ? 165 : 115;
   const elapsed = previousTime === undefined ? 16 : Math.min(time - previousTime, 64);
   displayedProgress ??= progress;
-  displayedProgress += (progress - displayedProgress) * (1 - Math.exp(-elapsed / 115));
+  displayedProgress += (progress - displayedProgress) * (1 - Math.exp(-elapsed / smoothingTime));
   const settling = Math.abs(progress - displayedProgress) > .0001;
   if (!settling) displayedProgress = progress;
   const angle = displayedProgress * 2 * Math.PI;
@@ -70,10 +72,9 @@ function draw(time) {
   mesh.material.opacity = baseOpacity * (.38 + .62 * facing);
   previousTime = settling ? time : undefined;
   const ratio = Math.min(devicePixelRatio, 1.5);
-  const compact = compactLayout.matches;
   const pointIndex = compact ? mesh.userData.mobileIndex : null;
   if (mesh.geometry.index !== pointIndex) mesh.geometry.setIndex(pointIndex);
-  mesh.material.size = (compact ? 1.4 : 1.6) * ratio;
+  mesh.material.size = (compact ? 1.3 : 1.6) * ratio;
   const width = Math.max(1, Math.round(layer.clientWidth * ratio));
   const height = Math.max(1, Math.round(layer.clientHeight * ratio));
   if (renderer.domElement.width !== width || renderer.domElement.height !== height) {
