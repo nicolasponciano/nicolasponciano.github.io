@@ -17,16 +17,16 @@ function createMesh(THREE) {
         + .16 * Math.sin(2.8 * x - 2.5 * z)
         + .07 * Math.cos(4.2 * x + 3 * z);
       vertices.push(x, crest - .12, z);
-      const shade = .39 + .23 * depth + .18 * crest;
-      shades.push(shade * .83, shade, shade * .96);
+      const shade = .75 + .25 * depth;
+      shades.push(shade, shade, shade);
     }
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
   geometry.setAttribute("color", new THREE.Float32BufferAttribute(shades, 3));
   const material = new THREE.PointsMaterial({
-    size: 1.6, sizeAttenuation: false, vertexColors: true,
-    transparent: true, opacity: .69, depthWrite: false
+    color: 0x45ae9f, size: 1.6, sizeAttenuation: false, vertexColors: true,
+    transparent: true, opacity: .76, depthWrite: false
   });
   return new THREE.Points(geometry, material);
 }
@@ -35,13 +35,24 @@ let view;
 let pending;
 let frame;
 
-function draw() {
+let displayedProgress;
+let previousTime;
+
+function draw(time) {
   frame = 0;
   if (!view || motion.matches || document.hidden) return;
   const { renderer, scene, camera, mesh } = view;
   const range = document.documentElement.scrollHeight - innerHeight;
   const progress = range > 0 ? Math.min(1, Math.max(0, scrollY / range)) : 0;
-  mesh.rotation.x = .28 + progress * .36;
+  const elapsed = previousTime === undefined ? 16 : Math.min(time - previousTime, 64);
+  displayedProgress ??= progress;
+  displayedProgress += (progress - displayedProgress) * (1 - Math.exp(-elapsed / 85));
+  const settling = Math.abs(progress - displayedProgress) > .0001;
+  if (!settling) displayedProgress = progress;
+  const phase = displayedProgress * Math.PI * 2;
+  mesh.rotation.set(.49 - .34 * Math.cos(phase) + .16 * displayedProgress,
+    .14 * Math.sin(phase), 0, "YXZ");
+  previousTime = settling ? time : undefined;
   const ratio = Math.min(devicePixelRatio, 1.5);
   mesh.material.size = (layer.clientWidth < 700 ? 1 : 1.6) * ratio;
   const width = Math.max(1, Math.round(layer.clientWidth * ratio));
@@ -50,6 +61,7 @@ function draw() {
     renderer.setSize(width, height, false);
   }
   renderer.render(scene, camera);
+  if (settling) schedule();
 }
 
 function schedule() {
