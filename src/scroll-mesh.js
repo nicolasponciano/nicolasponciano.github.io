@@ -1,6 +1,9 @@
 const layer = document.querySelector(".scroll-mesh");
 const motion = matchMedia("(prefers-reduced-motion: reduce)");
 const baseOpacity = .76;
+const fieldWidth = 9.2 * .92;
+const fieldDepth = 2.3;
+const cameraHalfWidth = 4;
 
 function createMesh(THREE) {
   const vertices = [];
@@ -9,11 +12,11 @@ function createMesh(THREE) {
   const rows = 44;
   for (let row = 0; row <= rows; row++) {
     const depth = row / rows;
-    const z = (depth - .5) * 2.3;
+    const z = (depth - .5) * fieldDepth;
     // Wider spacing toward the viewer gives the point field a low horizon.
     const spread = .92 + .37 * depth;
     for (let column = 0; column <= columns; column++) {
-      const x = (column / columns - .5) * 9.2 * spread;
+      const x = (column / columns - .5) * fieldWidth * spread / .92;
       const crest = .39 * Math.sin(1.55 * x + 1.9 * z)
         + .13 * Math.sin(2.8 * x - 2.5 * z)
         + .045 * Math.cos(4.2 * x + 3 * z);
@@ -30,7 +33,6 @@ function createMesh(THREE) {
     transparent: true, opacity: baseOpacity, depthWrite: false
   });
   const mesh = new THREE.Points(geometry, material);
-  mesh.rotation.order = "YXZ";
   mesh.rotation.x = .15;
   return mesh;
 }
@@ -56,9 +58,12 @@ function draw(time) {
   const angle = displayedProgress * 2 * Math.PI;
   const facing = Math.abs(Math.cos(angle));
   mesh.rotation.y = angle;
-  // Limit width compensation and dim the dots as they overlap in profile.
-  mesh.scale.x = 1 / Math.max(.84, facing);
-  mesh.material.opacity = baseOpacity * (.18 + .82 * facing);
+  // Frame the projection of the field's inscribed rectangle, even edge-on.
+  const projectedHalfWidth = (fieldWidth * facing + fieldDepth * Math.abs(Math.sin(angle))) / 2;
+  camera.right = Math.min(cameraHalfWidth, projectedHalfWidth * .98);
+  camera.left = -camera.right;
+  camera.updateProjectionMatrix();
+  mesh.material.opacity = baseOpacity * (.38 + .62 * facing);
   previousTime = settling ? time : undefined;
   const ratio = Math.min(devicePixelRatio, 1.5);
   mesh.material.size = (layer.clientWidth < 700 ? 1 : 1.6) * ratio;
@@ -85,7 +90,7 @@ async function sync() {
     const scene = new THREE.Scene();
     const mesh = createMesh(THREE);
     scene.add(mesh);
-    const camera = new THREE.OrthographicCamera(-4, 4, 1.2, -1.2, .1, 20);
+    const camera = new THREE.OrthographicCamera(-cameraHalfWidth, cameraHalfWidth, 1.2, -1.2, .1, 20);
     camera.position.z = 6;
     renderer.domElement.addEventListener("webglcontextlost", () => renderer.domElement.remove());
     renderer.domElement.addEventListener("webglcontextrestored", sync);
