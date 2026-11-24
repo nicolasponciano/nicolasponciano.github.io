@@ -4,16 +4,25 @@ const motion = matchMedia("(prefers-reduced-motion: reduce)");
 function createMesh(THREE) {
   const vertices = [];
   const columns = 120;
-  const rows = 16;
+  const rows = 28;
+  const ridges = [
+    // Center, depth, width, slope length and summit height.
+    [-2.8, -.45, 1.35, .62, .84],
+    [-1.6, -.73, .76, .5, .63],
+    [.48, .27, 1.05, .53, .7],
+    [2.75, -.51, 1.3, .72, 1.03]
+  ];
   function point(column, row) {
-    const t = column / columns;
-    const offset = (row / rows - .5) * 1.15;
-    const twist = t * Math.PI * 2.4 - .7;
-    return [
-      (t - .5) * 8.2,
-      .43 * Math.sin(t * Math.PI * 2.7) + offset * Math.cos(twist),
-      .34 * Math.cos(t * Math.PI * 2) + offset * Math.sin(twist)
-    ];
+    const x = (column / columns - .5) * 8.4;
+    const z = (row / rows - .5) * 2.4;
+    const warpedDepth = z + .19 * Math.sin(2.2 * x) + .12 * Math.sin(3.1 * z + x);
+    let elevation = -.44 + .055 * Math.sin(4 * x + 3 * z);
+    for (const [cx, cz, width, length, height] of ridges) {
+      const dx = (x - cx) / width;
+      const dz = (warpedDepth - cz) / length;
+      elevation += height * Math.exp(-dx * dx - dz * dz);
+    }
+    return [x, elevation, z];
   }
   for (let column = 0; column <= columns; column++) {
     for (let row = 0; row <= rows; row++) {
@@ -39,7 +48,7 @@ function draw() {
   const { renderer, scene, camera, mesh } = view;
   const range = document.documentElement.scrollHeight - innerHeight;
   const progress = range > 0 ? Math.min(1, Math.max(0, scrollY / range)) : 0;
-  mesh.rotation.x = .22 + progress * Math.PI * 2;
+  mesh.rotation.x = .28 + progress * .36;
   const ratio = Math.min(devicePixelRatio, 1.5);
   const width = Math.max(1, Math.round(layer.clientWidth * ratio));
   const height = Math.max(1, Math.round(layer.clientHeight * ratio));
