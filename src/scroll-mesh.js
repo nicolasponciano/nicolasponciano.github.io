@@ -3,39 +3,32 @@ const motion = matchMedia("(prefers-reduced-motion: reduce)");
 
 function createMesh(THREE) {
   const vertices = [];
-  const columns = 120;
-  const rows = 28;
-  const ridges = [
-    // Center, depth, width, slope length and summit height.
-    [-2.8, -.45, 1.35, .62, .84],
-    [-1.6, -.73, .76, .5, .63],
-    [.48, .27, 1.05, .53, .7],
-    [2.75, -.51, 1.3, .72, 1.03]
-  ];
-  function point(column, row) {
-    const x = (column / columns - .5) * 8.4;
-    const z = (row / rows - .5) * 2.4;
-    const warpedDepth = z + .19 * Math.sin(2.2 * x) + .12 * Math.sin(3.1 * z + x);
-    let elevation = -.44 + .055 * Math.sin(4 * x + 3 * z);
-    for (const [cx, cz, width, length, height] of ridges) {
-      const dx = (x - cx) / width;
-      const dz = (warpedDepth - cz) / length;
-      elevation += height * Math.exp(-dx * dx - dz * dz);
-    }
-    return [x, elevation, z];
-  }
-  for (let column = 0; column <= columns; column++) {
-    for (let row = 0; row <= rows; row++) {
-      const position = point(column, row);
-      if (column < columns) vertices.push(...position, ...point(column + 1, row));
-      if (row < rows && column % 3 === 0) vertices.push(...position, ...point(column, row + 1));
+  const shades = [];
+  const columns = 170;
+  const rows = 44;
+  for (let row = 0; row <= rows; row++) {
+    const depth = row / rows;
+    const z = (depth - .5) * 2.3;
+    // Wider spacing toward the viewer gives the point field a low horizon.
+    const spread = .92 + .37 * depth;
+    for (let column = 0; column <= columns; column++) {
+      const x = (column / columns - .5) * 9.2 * spread;
+      const crest = .35 * Math.sin(1.65 * x + 1.9 * z)
+        + .16 * Math.sin(2.8 * x - 2.5 * z)
+        + .07 * Math.cos(4.2 * x + 3 * z);
+      vertices.push(x, crest - .12, z);
+      const shade = .39 + .23 * depth + .18 * crest;
+      shades.push(shade * .83, shade, shade * .96);
     }
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
-  return new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({
-    color: 0x45ae9f, transparent: true, opacity: .76
-  }));
+  geometry.setAttribute("color", new THREE.Float32BufferAttribute(shades, 3));
+  const material = new THREE.PointsMaterial({
+    size: 1.6, sizeAttenuation: false, vertexColors: true,
+    transparent: true, opacity: .69, depthWrite: false
+  });
+  return new THREE.Points(geometry, material);
 }
 
 let view;
@@ -50,6 +43,7 @@ function draw() {
   const progress = range > 0 ? Math.min(1, Math.max(0, scrollY / range)) : 0;
   mesh.rotation.x = .28 + progress * .36;
   const ratio = Math.min(devicePixelRatio, 1.5);
+  mesh.material.size = (layer.clientWidth < 700 ? 1 : 1.6) * ratio;
   const width = Math.max(1, Math.round(layer.clientWidth * ratio));
   const height = Math.max(1, Math.round(layer.clientHeight * ratio));
   if (renderer.domElement.width !== width || renderer.domElement.height !== height) {
