@@ -383,7 +383,7 @@ html[data-theme="paper"] .wordmark-logo-light {
   inset-inline: 0;
   height: clamp(150px, 30vw, 42vh);
   bottom: 8vh;
-  opacity: .53;
+  opacity: .59;
 }
 
 .scroll-mesh img,
@@ -405,7 +405,7 @@ html[data-theme="paper"] .wordmark-logo-light {
 @media (max-width: 700px) {
   .scroll-mesh {
     bottom: 4vh;
-    opacity: .38;
+    opacity: .43;
   }
 }
 
@@ -1154,7 +1154,7 @@ h2 {
 .path-place::before {
   margin: 0 7px;
   color: var(--muted);
-  content: "Â·";
+  content: "Ã‚Â·";
 }
 
 @media (min-width: 1024px) {
