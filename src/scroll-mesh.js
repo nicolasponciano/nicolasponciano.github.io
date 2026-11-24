@@ -1,5 +1,6 @@
 const layer = document.querySelector(".scroll-mesh");
 const motion = matchMedia("(prefers-reduced-motion: reduce)");
+const baseOpacity = .76;
 
 function createMesh(THREE) {
   const vertices = [];
@@ -26,7 +27,7 @@ function createMesh(THREE) {
   geometry.setAttribute("color", new THREE.Float32BufferAttribute(shades, 3));
   const material = new THREE.PointsMaterial({
     color: 0x45ae9f, size: 1.6, sizeAttenuation: false, vertexColors: true,
-    transparent: true, opacity: .76, depthWrite: false
+    transparent: true, opacity: baseOpacity, depthWrite: false
   });
   const mesh = new THREE.Points(geometry, material);
   mesh.rotation.order = "YXZ";
@@ -46,16 +47,18 @@ function draw(time) {
   if (!view || motion.matches || document.hidden) return;
   const { renderer, scene, camera, mesh } = view;
   const range = Math.max(0, document.documentElement.scrollHeight - innerHeight);
-  const progress = Math.min(range, Math.max(0, scrollY)) / Math.max(1, innerHeight);
+  const progress = range > 0 ? Math.min(1, Math.max(0, scrollY / range)) : 0;
   const elapsed = previousTime === undefined ? 16 : Math.min(time - previousTime, 64);
   displayedProgress ??= progress;
-  displayedProgress += (progress - displayedProgress) * (1 - Math.exp(-elapsed / 85));
+  displayedProgress += (progress - displayedProgress) * (1 - Math.exp(-elapsed / 115));
   const settling = Math.abs(progress - displayedProgress) > .0001;
   if (!settling) displayedProgress = progress;
-  // Sweep around the vertical axis and compensate for the projected width.
-  const yaw = .62 * Math.sin(displayedProgress * Math.PI / 2);
-  mesh.rotation.y = yaw;
-  mesh.scale.x = 1 / Math.cos(yaw);
+  const angle = displayedProgress * 2 * Math.PI;
+  const facing = Math.abs(Math.cos(angle));
+  mesh.rotation.y = angle;
+  // Limit width compensation and dim the dots as they overlap in profile.
+  mesh.scale.x = 1 / Math.max(.84, facing);
+  mesh.material.opacity = baseOpacity * (.18 + .82 * facing);
   previousTime = settling ? time : undefined;
   const ratio = Math.min(devicePixelRatio, 1.5);
   mesh.material.size = (layer.clientWidth < 700 ? 1 : 1.6) * ratio;
